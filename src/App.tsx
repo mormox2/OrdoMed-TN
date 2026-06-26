@@ -25,7 +25,8 @@ import {
   where, 
   onSnapshot, 
   doc, 
-  getDocs 
+  getDocs,
+  setDoc
 } from 'firebase/firestore';
 import { 
   setupUserAndGetProfile, 
@@ -208,9 +209,36 @@ export default function App() {
   // Handle logout
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+       await signOut(auth);
     } catch (err) {
-      console.error('Failed to log out:', err);
+       console.error('Failed to log out:', err);
+    }
+  };
+
+  // Toggle role in database for convenient developer and clinic testing
+  const handleToggleRole = async () => {
+    if (!userProfile) return;
+    const newRole = userProfile.role === 'doctor' ? 'secretary' : 'doctor';
+    
+    // When becoming doctor, doctorUid becomes user's own uid.
+    // When becoming secretary, we keep their own uid or existing doctorUid to maintain test integrity.
+    const updatedProfile: UserProfile = {
+      ...userProfile,
+      role: newRole,
+      doctorUid: newRole === 'doctor' ? userProfile.uid : userProfile.doctorUid
+    };
+
+    try {
+      const userDocRef = doc(dbFirestore, 'users', userProfile.uid);
+      await setDoc(userDocRef, updatedProfile);
+      setUserProfile(updatedProfile);
+      
+      if (newRole === 'secretary') {
+        setActiveTab('prescription');
+      }
+    } catch (err) {
+      console.error('Failed to toggle role:', err);
+      alert("Erreur lors de la mise à jour du rôle.");
     }
   };
 
@@ -484,14 +512,23 @@ export default function App() {
             {/* User Profile & Logout */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex flex-col items-end text-xs">
-                <span className="font-semibold text-slate-200 truncate max-w-[150px]">{user?.email}</span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  {userProfile?.role === 'doctor' ? 'Médecin' : 'Secrétaire'}
-                </span>
+                <span className="font-semibold text-slate-200 truncate max-w-[150px] text-slate-300">{user?.email}</span>
+                <button
+                  type="button"
+                  onClick={handleToggleRole}
+                  className={`mt-0.5 px-2 py-0.5 text-[9px] font-extrabold rounded-md uppercase tracking-wider transition-all border cursor-pointer ${
+                    userProfile?.role === 'doctor'
+                      ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/60 hover:bg-emerald-900/50 hover:text-emerald-200'
+                      : 'bg-amber-950/40 text-amber-300 border-amber-800/60 hover:bg-amber-900/50 hover:text-amber-200'
+                  }`}
+                  title="Changer de rôle (Médecin <-> Secrétaire) • تبديل الدور"
+                >
+                  {userProfile?.role === 'doctor' ? 'Médecin 🩺' : 'Secrétaire 📋'}
+                </button>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                className="p-2.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
                 title="Se déconnecter"
               >
                 <LogOut className="w-4.5 h-4.5" />

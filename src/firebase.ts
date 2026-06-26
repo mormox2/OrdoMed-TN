@@ -1,12 +1,38 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signOut as secondarySignOut } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 // CRITICAL: The app will break without specifying the correct databaseId
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const dbFirestore = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = dbFirestore; // Maintain both exports just in case
 export const auth = getAuth();
+
+/**
+ * Creates a secondary user in Firebase Auth without disrupting the current signed-in user.
+ * This is useful for doctors creating secretary accounts from inside the applet.
+ */
+export async function createSecondaryUser(email: string, password: string): Promise<string> {
+  const tempAppName = `SecondaryHelper-${Math.random().toString(36).substring(7)}`;
+  const secondaryApp = initializeApp(firebaseConfig, tempAppName);
+  const secondaryAuth = getAuth(secondaryApp);
+  
+  try {
+    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    const uid = userCredential.user.uid;
+    // Sign out from the secondary instance to clear state
+    await secondarySignOut(secondaryAuth);
+    return uid;
+  } finally {
+    // Delete the secondary app to clean up listeners and state
+    try {
+      await deleteApp(secondaryApp);
+    } catch (e) {
+      console.warn("Could not clean up secondary app:", e);
+    }
+  }
+}
 
 export enum OperationType {
   CREATE = 'create',

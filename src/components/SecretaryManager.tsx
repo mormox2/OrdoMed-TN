@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, UserX, Shield, Mail, Loader2, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import { createSecretaryInvitation, fetchSecretaries, deleteSecretaryProfile, UserProfile } from '../services/dbService';
+import { UserPlus, UserX, Shield, Mail, Loader2, CheckCircle, AlertCircle, RefreshCw, Key, Eye, EyeOff } from 'lucide-react';
+import { createSecretaryAccount, fetchSecretaries, deleteSecretaryProfile, UserProfile } from '../services/dbService';
 
 interface SecretaryManagerProps {
   doctorUid: string;
@@ -9,6 +9,8 @@ interface SecretaryManagerProps {
 export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
   const [secretaries, setSecretaries] = useState<UserProfile[]>([]);
   const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +42,15 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
     setSuccess(null);
 
     const targetEmail = emailInput.trim().toLowerCase();
+    const pass = passwordInput.trim();
 
-    // Prevent adding self as secretary
+    if (pass && pass.length < 6) {
+      setError("Le mot de passe d'accès direct doit contenir au moins 6 caractères.");
+      setActionLoading(false);
+      return;
+    }
+
+    // Prevent duplicate secretary email
     if (secretaries.some(s => s.email === targetEmail)) {
       setError("Cette adresse e-mail est déjà associée à un profil secrétaire.");
       setActionLoading(false);
@@ -49,12 +58,20 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
     }
 
     try {
-      await createSecretaryInvitation(doctorUid, targetEmail);
+      await createSecretaryAccount(doctorUid, targetEmail, pass || undefined);
       setEmailInput('');
-      setSuccess(`L'invitation de secrétariat pour "${targetEmail}" a été configurée avec succès.`);
+      setPasswordInput('');
+      
+      if (pass) {
+        setSuccess(`Le compte de la secrétaire "${targetEmail}" a été créé et validé automatiquement. Elle peut s'identifier directement avec cet e-mail et son mot de passe.`);
+      } else {
+        setSuccess(`Le compte secrétaire "${targetEmail}" (Accès Google) a été configuré et validé automatiquement.`);
+      }
+      
       await loadSecretaries();
     } catch (err: any) {
-      setError("Erreur lors de la création du profil secrétaire.");
+      console.error(err);
+      setError("Erreur lors de la création du compte secrétaire. Assurez-vous que l'adresse email est valide.");
     } finally {
       setActionLoading(false);
     }
@@ -123,45 +140,72 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
         )}
 
         {/* Form to Add Secretary */}
-        <form onSubmit={handleAddSecretary} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div className="md:col-span-2">
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-              Adresse e-mail Google de la secrétaire *
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-3 w-4.5 h-4.5 text-slate-400" />
-              <input
-                type="email"
-                required
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                placeholder="Ex: secretaire.cabinet@gmail.com"
-              />
+        <form onSubmit={handleAddSecretary} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                Adresse e-mail de la secrétaire *
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-3 w-4.5 h-4.5 text-slate-400" />
+                <input
+                  type="email"
+                  required
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                  placeholder="Ex: secretaire.cabinet@gmail.com"
+                />
+              </div>
             </div>
-            <p className="text-[10px] text-slate-400 mt-1">
-              La secrétaire devra s'authentifier via Google avec cet e-mail pour accéder à vos dossiers patients de manière sécurisée.
-            </p>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center justify-between">
+                <span>Mot de passe d'accès direct (Optionnel)</span>
+                <span className="text-[10px] text-slate-400 font-normal">Min. 6 car.</span>
+              </label>
+              <div className="relative">
+                <Key className="absolute left-3.5 top-3 w-4.5 h-4.5 text-slate-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="w-full pl-10 pr-10 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                  placeholder="Laisser vide pour Google Auth"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
           </div>
-          <div>
+
+          <div className="flex items-center justify-between gap-4 pt-2">
+            <p className="text-[10px] text-slate-400 max-w-xl">
+              💡 <strong>Sélection automatique :</strong> Si vous indiquez un mot de passe, un compte authentifié autonome est immédiatement créé. Sinon, la secrétaire s'identifiera directement via son compte Google. Dans les deux cas, le compte est validé instantanément et n'est pas mis en attente.
+            </p>
             <button
               type="submit"
               disabled={actionLoading || !emailInput}
-              className="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-medium rounded-xl text-sm transition-all shadow-sm shadow-teal-100 cursor-pointer"
+              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-medium rounded-xl text-sm transition-all shadow-sm shadow-teal-100 cursor-pointer shrink-0"
             >
               {actionLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <UserPlus className="w-4 h-4" />
               )}
-              Ajouter Secrétaire
+              Créer Compte Secrétaire
             </button>
           </div>
         </form>
 
         <div className="border-t border-slate-100 pt-6">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
-            Profils Habilités & Invitations Actives ({secretaries.length})
+            Comptes Secrétaires Validés & Actifs ({secretaries.length})
           </h3>
 
           {loading ? (
@@ -176,7 +220,7 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {secretaries.map((s) => {
-                const isPending = s.uid.startsWith('email:');
+                const isPendingGoogle = s.uid.startsWith('email:');
                 return (
                   <div
                     key={s.uid}
@@ -185,18 +229,17 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
                     <div className="space-y-1">
                       <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                         <span>{s.email}</span>
-                        {isPending ? (
-                          <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-md text-[9px] font-medium tracking-wide">
-                            En Attente
-                          </span>
-                        ) : (
-                          <span className="px-1.5 py-0.5 bg-teal-50 text-teal-700 border border-teal-100 rounded-md text-[9px] font-medium tracking-wide">
-                            Connectée
-                          </span>
-                        )}
                       </div>
-                      <div className="text-[10px] text-slate-400">
-                        Inscrite le {new Date(s.createdAt).toLocaleDateString('fr-FR')}
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        <span className="px-1.5 py-0.5 bg-teal-50 text-teal-700 border border-teal-100 rounded-md text-[9px] font-semibold tracking-wide">
+                          Compte Validé & Actif
+                        </span>
+                        <span className="px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-100 rounded-md text-[9px] font-medium">
+                          {isPendingGoogle ? 'Accès Google Auth' : 'Accès Direct'}
+                        </span>
+                      </div>
+                      <div className="text-[9px] text-slate-400 pt-0.5">
+                        Ajouté le {new Date(s.createdAt).toLocaleDateString('fr-FR')}
                       </div>
                     </div>
                     <button

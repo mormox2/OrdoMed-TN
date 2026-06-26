@@ -3,6 +3,7 @@
 Une application web moderne, bilingue (Français / Arabe) et hautement sécurisée, conçue sur mesure pour les cabinets médicaux et praticiens de santé en Tunisie. Cet ordonnancier intelligent rationalise la rédaction de prescriptions tout en garantissant la sécurité clinique des patients et la conformité avec la réglementation sanitaire tunisienne.
 
 ---
+Dr Rtimi Mossaab
 
 ## 🌟 Fonctionnalités Principales
 
@@ -34,6 +35,11 @@ Une application web moderne, bilingue (Français / Arabe) et hautement sécuris�
 ### 6. Impression Optimisée (Formats A4 et A5)
 * Rendu haute fidélité optimisé pour l'impression physique ou l'export PDF.
 * Options de mise en page réactives pour s'adapter parfaitement aux dimensions classiques d'ordonnances médicales (**A4** ou demi-feuille **A5**).
+
+### 7. Gestion Multi-Comptes & Secrétariat Connecté
+* **Restriction de l'inscription** : Seul un médecin peut s'enregistrer initialement et posséder le compte principal du cabinet.
+* **Comptes Secrétaires Annexes** : Depuis son espace de travail, le médecin peut ajouter et lier des comptes de secrétariat en saisissant leur adresse e-mail.
+* **Validation Automatique & Immédiate** : Le médecin peut définir un mot de passe d'accès direct lors de la création du compte secrétaire (ou opter pour l'authentification Google). Le compte de la secrétaire est validé automatiquement dès sa création, lui évitant toute période d'attente ou statut suspendu, et lui permettant de s'authentifier immédiatement pour gérer les dossiers patients.
 
 ---
 

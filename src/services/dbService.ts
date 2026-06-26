@@ -10,7 +10,7 @@ import {
   getDocs,
   writeBatch
 } from 'firebase/firestore';
-import { db, auth, handleFirestoreError, OperationType } from '../firebase';
+import { db, auth, handleFirestoreError, OperationType, createSecondaryUser } from '../firebase';
 import { Patient, Prescription, PrescriptionItem, DoctorConfig } from '../types';
 
 export interface UserProfile {
@@ -27,6 +27,44 @@ export interface UserProfile {
 export async function setupUserAndGetProfile(uid: string, email: string): Promise<UserProfile> {
   const userDocRef = doc(db, 'users', uid);
   const emailDocRef = doc(db, 'users', `email:${email.toLowerCase()}`);
+
+  const lowercaseEmail = email.toLowerCase().trim();
+
+  // Explicit doctor override for dmossaab@gmail.com
+  if (lowercaseEmail === 'dmossaab@gmail.com') {
+    const profile: UserProfile = {
+      uid,
+      email: lowercaseEmail,
+      role: 'doctor',
+      doctorUid: uid,
+      createdAt: new Date().toISOString()
+    };
+    try {
+      await setDoc(userDocRef, profile);
+      await deleteDoc(emailDocRef);
+    } catch (e) {
+      console.warn("Could not delete secondary invitation for dmossaab@gmail.com:", e);
+    }
+    
+    // Ensure default doctor configuration exists
+    const configDocRef = doc(db, 'doctorConfigs', uid);
+    const configSnap = await getDoc(configDocRef);
+    if (!configSnap.exists()) {
+      const defaultDoctorConfig: DoctorConfig = {
+        name_fr: 'Cabinet Médical',
+        name_ar: 'العيادة الطبية',
+        specialty_fr: 'Médecin Généraliste',
+        specialty_ar: 'طب عام',
+        order_number: 'TN-2026-0000',
+        address_fr: 'Tunis, Tunisie',
+        address_ar: 'تونس، تونس',
+        phone: '+216 71 000 000',
+        show_automatic_stamp: true
+      };
+      await setDoc(configDocRef, defaultDoctorConfig);
+    }
+    return profile;
+  }
 
   try {
     // 1. Check if UID doc exists
@@ -122,21 +160,47 @@ export async function saveDoctorConfig(doctorUid: string, config: DoctorConfig):
 }
 
 /**
- * Create a secretary invitation/account by registering their email
+ * Create a secretary invitation/account by registering their email (either via password or Google auth)
  */
-export async function createSecretaryInvitation(doctorUid: string, email: string): Promise<void> {
+export async function createSecretaryAccount(doctorUid: string, email: string, password?: string): Promise<string> {
   const normalizedEmail = email.trim().toLowerCase();
-  const path = `users/email:${normalizedEmail}`;
-  try {
-    await setDoc(doc(db, 'users', `email:${normalizedEmail}`), {
-      email: normalizedEmail,
-      role: 'secretary',
-      doctorUid,
-      createdAt: new Date().toISOString()
-    });
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, path);
-    throw error;
+  
+  if (password && password.trim().length >= 6) {
+    const path = `users/email:${normalizedEmail}`;
+    try {
+      // 1. Create the Firebase Authentication user using our secondary app instance
+      const uid = await createSecondaryUser(normalizedEmail, password.trim());
+      
+      // 2. Directly create the active UserProfile in Firestore
+      const profile: UserProfile = {
+        uid,
+        email: normalizedEmail,
+        role: 'secretary',
+        doctorUid,
+        createdAt: new Date().toISOString()
+      };
+      
+      await setDoc(doc(db, 'users', uid), profile);
+      return uid;
+    } catch (error) {
+      console.error('Error creating secondary auth user:', error);
+      throw error;
+    }
+  } else {
+    // Standard Google auth invitation
+    const path = `users/email:${normalizedEmail}`;
+    try {
+      await setDoc(doc(db, 'users', `email:${normalizedEmail}`), {
+        email: normalizedEmail,
+        role: 'secretary',
+        doctorUid,
+        createdAt: new Date().toISOString()
+      });
+      return `email:${normalizedEmail}`;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
   }
 }
 

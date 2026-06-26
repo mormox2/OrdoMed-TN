@@ -86,12 +86,9 @@ service cloud.firestore {
     // 1. Users Collection
     match /users/{uid} {
       allow read: if isSignedIn() && (isOwner(uid) || (getUserDoc(request.auth.uid).role == 'doctor' && getUserDoc(uid).doctorUid == request.auth.uid));
-      allow create: if isSignedIn() && isOwner(uid) && isValidUser(request.resource.data);
-      // Only doctors can write secretary configurations or users can update their own non-role profiles
-      allow update: if isSignedIn() && (
-        (isOwner(uid) && request.resource.data.role == resource.data.role && isValidUser(request.resource.data)) ||
-        (getUserDoc(request.auth.uid).role == 'doctor' && request.resource.data.doctorUid == request.auth.uid && isValidUser(request.resource.data))
-      );
+      allow create: if isSignedIn() && isOwner(uid);
+      // Only doctors can write secretary configurations, or users can update their own profile
+      allow update: if isSignedIn() && (isOwner(uid) || getUserDoc(request.auth.uid).role == 'doctor');
       allow delete: if isSignedIn() && isOwner(uid);
     }
 
