@@ -304,7 +304,11 @@ export default function App() {
         await savePrescriptionToFirestore(prescription, userProfile.doctorUid);
         
         // Retrieve and delete any lines no longer in the list to prevent orphaned items
-        const existingItemsQuery = query(collection(dbFirestore, 'prescriptionItems'), where('prescription_id', '==', prescription.id));
+        const existingItemsQuery = query(
+          collection(dbFirestore, 'prescriptionItems'),
+          where('doctorUid', '==', userProfile.doctorUid),
+          where('prescription_id', '==', prescription.id)
+        );
         const existingSnap = await getDocs(existingItemsQuery);
         const newItemsIds = new Set(items.map(i => i.id));
         
@@ -351,7 +355,11 @@ export default function App() {
       try {
         await savePrescriptionToFirestore(prescription, userProfile.doctorUid);
         
-        const existingItemsQuery = query(collection(dbFirestore, 'prescriptionItems'), where('prescription_id', '==', prescription.id));
+        const existingItemsQuery = query(
+          collection(dbFirestore, 'prescriptionItems'),
+          where('doctorUid', '==', userProfile.doctorUid),
+          where('prescription_id', '==', prescription.id)
+        );
         const existingSnap = await getDocs(existingItemsQuery);
         const newItemsIds = new Set(items.map(i => i.id));
         

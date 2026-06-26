@@ -21,17 +21,19 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(uid)).data;
     }
 
-    // Check if the user is a secretary for a specific doctor
-    function isSecretaryOf(doctorUid) {
+    // Check if the logged-in user (doctor or secretary) belongs to the specified doctorUid
+    function isAuthorizedForDoctor(doctorUid) {
       return isSignedIn() && 
              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             getUserDoc(request.auth.uid).role == 'secretary' && 
-             getUserDoc(request.auth.uid).doctorUid == doctorUid;
+             (request.auth.uid == doctorUid || getUserDoc(request.auth.uid).doctorUid == doctorUid);
     }
 
-    // Check if user is either the doctor or their authorized secretary
-    function isAuthorizedDoctorOrSecretary(doctorUid) {
-      return isOwner(doctorUid) || isSecretaryOf(doctorUid);
+    // Check if the logged-in user is a doctor and matches the doctorUid
+    function isAuthorizedDoctor(doctorUid) {
+      return isSignedIn() && 
+             request.auth.uid == doctorUid &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserDoc(request.auth.uid).role == 'doctor';
     }
 
     function isValidId(id) {
@@ -40,8 +42,7 @@ service cloud.firestore {
 
     // Validation functions
     function isValidUser(data) {
-      return data.uid is string && data.uid.size() <= 128 &&
-             data.email is string && data.email.size() <= 256 &&
+      return data.email is string && data.email.size() <= 256 &&
              data.role in ['doctor', 'secretary'] &&
              data.doctorUid is string && data.doctorUid.size() <= 128;
     }
@@ -85,44 +86,57 @@ service cloud.firestore {
 
     // 1. Users Collection
     match /users/{uid} {
-      allow read: if isSignedIn() && (isOwner(uid) || (getUserDoc(request.auth.uid).role == 'doctor' && getUserDoc(uid).doctorUid == request.auth.uid));
-      allow create: if isSignedIn() && isOwner(uid);
-      // Only doctors can write secretary configurations, or users can update their own profile
-      allow update: if isSignedIn() && (isOwner(uid) || getUserDoc(request.auth.uid).role == 'doctor');
-      allow delete: if isSignedIn() && isOwner(uid);
+      allow read: if isSignedIn() && (
+        isOwner(uid) || 
+        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).doctorUid == request.auth.uid) || 
+        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).email == request.auth.token.email)
+      );
+      allow create: if isSignedIn() && (
+        isOwner(uid) || 
+        request.resource.data.doctorUid == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        isOwner(uid) || 
+        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).doctorUid == request.auth.uid)
+      );
+      allow delete: if isSignedIn() && (
+        isOwner(uid) || 
+        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).doctorUid == request.auth.uid) || 
+        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).email == request.auth.token.email)
+      );
     }
 
     // 2. DoctorConfigs Collection
     match /doctorConfigs/{doctorUid} {
-      allow read: if isSignedIn() && isAuthorizedDoctorOrSecretary(doctorUid);
-      allow create, update: if isSignedIn() && isOwner(doctorUid) && isValidDoctorConfig(request.resource.data);
-      allow delete: if isSignedIn() && isOwner(doctorUid);
+      allow read: if isSignedIn() && isAuthorizedForDoctor(doctorUid);
+      allow create, update: if isSignedIn() && isAuthorizedDoctor(doctorUid) && isValidDoctorConfig(request.resource.data);
+      allow delete: if isSignedIn() && isAuthorizedDoctor(doctorUid);
     }
 
     // 3. Patients Collection
     match /patients/{patientId} {
-      allow read: if isSignedIn() && isAuthorizedDoctorOrSecretary(resource.data.doctorUid);
-      allow create: if isSignedIn() && isAuthorizedDoctorOrSecretary(request.resource.data.doctorUid) && isValidPatient(request.resource.data);
-      allow update: if isSignedIn() && isAuthorizedDoctorOrSecretary(resource.data.doctorUid) && isAuthorizedDoctorOrSecretary(request.resource.data.doctorUid) && isValidPatient(request.resource.data);
-      allow delete: if isSignedIn() && isOwner(resource.data.doctorUid);
+      allow read: if isSignedIn() && isAuthorizedForDoctor(resource.data.doctorUid);
+      allow create: if isSignedIn() && isAuthorizedForDoctor(request.resource.data.doctorUid) && isValidPatient(request.resource.data);
+      allow update: if isSignedIn() && isAuthorizedForDoctor(resource.data.doctorUid) && isAuthorizedForDoctor(request.resource.data.doctorUid) && isValidPatient(request.resource.data);
+      allow delete: if isSignedIn() && isAuthorizedDoctor(resource.data.doctorUid);
     }
 
     // 4. Prescriptions Collection
     // SECRETARY has NO access to prescriptions
     match /prescriptions/{prescriptionId} {
-      allow read: if isSignedIn() && isOwner(resource.data.doctorUid);
-      allow create: if isSignedIn() && isOwner(request.resource.data.doctorUid) && isValidPrescription(request.resource.data);
-      allow update: if isSignedIn() && isOwner(resource.data.doctorUid) && isOwner(request.resource.data.doctorUid) && isValidPrescription(request.resource.data) && resource.data.status != 'signed';
-      allow delete: if isSignedIn() && isOwner(resource.data.doctorUid) && resource.data.status != 'signed';
+      allow read: if isSignedIn() && isAuthorizedDoctor(resource.data.doctorUid);
+      allow create: if isSignedIn() && isAuthorizedDoctor(request.resource.data.doctorUid) && isValidPrescription(request.resource.data);
+      allow update: if isSignedIn() && isAuthorizedDoctor(resource.data.doctorUid) && isAuthorizedDoctor(request.resource.data.doctorUid) && isValidPrescription(request.resource.data) && resource.data.status != 'signed';
+      allow delete: if isSignedIn() && isAuthorizedDoctor(resource.data.doctorUid) && resource.data.status != 'signed';
     }
 
     // 5. PrescriptionItems Collection
     // SECRETARY has NO access to prescription items
     match /prescriptionItems/{prescriptionItemId} {
-      allow read: if isSignedIn() && isOwner(resource.data.doctorUid);
-      allow create: if isSignedIn() && isOwner(request.resource.data.doctorUid) && isValidPrescriptionItem(request.resource.data);
-      allow update: if isSignedIn() && isOwner(resource.data.doctorUid) && isOwner(request.resource.data.doctorUid) && isValidPrescriptionItem(request.resource.data);
-      allow delete: if isSignedIn() && isOwner(resource.data.doctorUid);
+      allow read: if isSignedIn() && isAuthorizedDoctor(resource.data.doctorUid);
+      allow create: if isSignedIn() && isAuthorizedDoctor(request.resource.data.doctorUid) && isValidPrescriptionItem(request.resource.data);
+      allow update: if isSignedIn() && isAuthorizedDoctor(resource.data.doctorUid) && isAuthorizedDoctor(request.resource.data.doctorUid) && isValidPrescriptionItem(request.resource.data);
+      allow delete: if isSignedIn() && isAuthorizedDoctor(resource.data.doctorUid);
     }
   }
 }

@@ -31,7 +31,8 @@ import {
   Languages,
   ShieldAlert,
   Skull,
-  Scale
+  Scale,
+  Activity
 } from 'lucide-react';
 import { logAudit, normalizeSearchText } from '../data';
 import { 
@@ -730,99 +731,140 @@ export default function PrescriptionForm({
             <div className="space-y-5">
               <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Lignes de prescription :</h3>
 
-              {/* Directives de Sécurité Clinique / Clinical Safety Alerts */}
+              {/* Directives de Sécurité Clinique / Clinical Decision Support Panel */}
               {items.length > 0 && (detectedInteractions.length > 0 || detectedOverlaps.length > 0 || items.some(it => getAllergyAlertForLine(it)) || items.some(it => medicines.find((m) => m.id === it.medicine_id)?.requires_special_prescription)) && (
-                <div className="p-4 bg-rose-50/50 border border-rose-100 rounded-2xl space-y-3.5 animate-fadeIn" id="clinical-safety-card">
-                  <div className="flex items-center gap-2 text-rose-800 font-bold text-xs uppercase tracking-wider">
-                    <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 animate-pulse" />
-                    <span>Alerte de Sécurité Clinique & Réglementaire</span>
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-4 animate-fadeIn shadow-sm" id="clinical-decision-support-panel">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="w-5 h-5 text-rose-500 animate-pulse shrink-0" />
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Aide à la Décision Clinique & Sécurité</h4>
+                        <p className="text-[10px] text-slate-500">Analyse automatisée en temps réel des risques iatrogènes et réglementaires</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-[9px] font-bold rounded-lg uppercase">
+                      OrdoCheck® Actif
+                    </span>
                   </div>
-                  
-                  <div className="divide-y divide-rose-100/60 text-xs">
-                    {/* Allergies Alerts */}
-                    {items.map((item, idx) => {
-                      const allergen = getAllergyDetailsForLine(item);
-                      if (!allergen) return null;
-                      return (
-                        <div key={`all-${idx}`} className="py-2.5 first:pt-0 flex items-start gap-2 text-rose-900 leading-relaxed">
-                          <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5 animate-pulse" />
-                          <div>
-                            <div className="font-bold flex items-center gap-1.5">
-                              <span>ALLERGIE DÉTECTÉE : {item.medicine_label}</span>
-                              <span className="px-1.5 py-0.5 bg-rose-100 border border-rose-200 text-[9px] font-bold text-rose-800 rounded">Patient Allergique</span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    {/* Column 1: Critical Alerts (Allergies & Critical Interactions) */}
+                    {(items.some(it => getAllergyAlertForLine(it)) || detectedInteractions.some(int => int.severity === 'critical')) ? (
+                      <div className="p-3 bg-red-50/60 border border-red-100 rounded-xl space-y-3">
+                        <div className="flex items-center gap-1.5 text-red-800 font-bold uppercase text-[10px] tracking-wider">
+                          <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+                          <span>🔴 Risques Majeurs / Contre-indications</span>
+                        </div>
+                        <div className="space-y-2.5 divide-y divide-red-100/50">
+                          {/* Allergies Alerts */}
+                          {items.map((item, idx) => {
+                            const allergen = getAllergyDetailsForLine(item);
+                            if (!allergen) return null;
+                            return (
+                              <div key={`all-${idx}`} className="pt-2.5 first:pt-0 flex items-start gap-2 text-red-950">
+                                <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                <div>
+                                  <div className="font-bold flex items-center gap-1">
+                                    <span>Allergie : {item.medicine_label}</span>
+                                  </div>
+                                  <p className="text-[11px] text-slate-600 mt-0.5">
+                                    Substance allergisante : <strong className="text-red-700">{allergen}</strong>. Risque de choc anaphylactique.
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {/* Critical Interactions */}
+                          {detectedInteractions.filter(int => int.severity === 'critical').map((int, idx) => (
+                            <div key={`int-crit-${idx}`} className="pt-2.5 first:pt-0 flex items-start gap-2 text-red-950">
+                              <Skull className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                <div className="font-bold flex items-center justify-between">
+                                  <span>Interaction Critique : {int.title_fr}</span>
+                                  <span className="text-[9px] bg-red-100 text-red-800 font-bold px-1 rounded uppercase">Danger</span>
+                                </div>
+                                <p className="font-semibold text-red-950 text-[10px] mt-0.5 p-1 bg-white/60 rounded border border-red-100">
+                                  {int.medicineALabel} ↔ {int.medicineBLabel}
+                                </p>
+                                <p className="text-slate-600 text-[11px] mt-1 font-medium italic">{int.description_fr}</p>
+                              </div>
                             </div>
-                            <p className="mt-0.5 text-slate-600">
-                              Le patient est connu pour être allergique à : <strong className="text-rose-700 underline">{allergen}</strong>. Ce médicament contient cette substance ou correspond à ce nom commercial.
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* Drug-drug Interactions */}
-                    {detectedInteractions.map((int, idx) => (
-                      <div key={`int-${idx}`} className="py-2.5 flex items-start gap-2.5 text-rose-900 leading-relaxed">
-                        <Skull className={`w-4 h-4 shrink-0 mt-0.5 ${int.severity === 'critical' ? 'text-red-600 animate-bounce' : 'text-amber-500'}`} />
-                        <div className="flex-1">
-                          <div className="font-bold flex flex-wrap items-center gap-2">
-                            <span>INTERACTION : {int.title_fr}</span>
-                            <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded uppercase ${
-                              int.severity === 'critical' 
-                                ? 'bg-red-100 text-red-800 border border-red-200 animate-pulse' 
-                                : 'bg-amber-100 text-amber-800 border border-amber-200'
-                            }`}>
-                              {int.severity === 'critical' ? 'Danger Critique' : 'Précaution d\'emploi'}
-                            </span>
-                          </div>
-                          <p className="mt-1 font-semibold text-rose-950 text-[11px] bg-white/40 p-2 rounded-lg border border-rose-100/50">
-                            {int.medicineALabel} <span className="text-rose-500">↔</span> {int.medicineBLabel}
-                          </p>
-                          <p className="mt-1.5 text-slate-700 italic font-medium">{int.description_fr}</p>
-                          <p className="mt-1 text-slate-500 text-right font-semibold" dir="rtl">{int.description_ar}</p>
+                          ))}
                         </div>
                       </div>
-                    ))}
-
-                    {/* Overlaps / Overdose Therapeutic Doublements */}
-                    {detectedOverlaps.map((overlap, idx) => (
-                      <div key={`ov-${idx}`} className="py-2.5 flex items-start gap-2.5 text-amber-900 leading-relaxed">
-                        <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                          <div className="font-bold flex items-center gap-1.5">
-                            <span>REDONDANCE : Doublement Thérapeutique ({overlap.substance})</span>
-                            <span className="px-1.5 py-0.5 bg-amber-100 border border-amber-200 text-[9px] font-bold text-amber-800 rounded">Overdose Possible</span>
-                          </div>
-                          <p className="mt-1 text-slate-700">
-                            La substance active <strong className="text-amber-700">{overlap.substance}</strong> est prescrite plusieurs fois sur cette ordonnance :
-                          </p>
-                          <p className="mt-1 font-mono text-[10px] text-slate-500">
-                            • {overlap.medicineALabel} <br />
-                            • {overlap.medicineBLabel}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Psychotropic Regulatory Reminder */}
-                    {items.some(item => medicines.find((m) => m.id === item.medicine_id)?.requires_special_prescription) && (
-                      <div className="py-3 flex items-start gap-2.5 text-violet-900 leading-relaxed">
-                        <Scale className="w-4.5 h-4.5 text-violet-600 shrink-0 mt-0.5 animate-pulse" />
-                        <div className="flex-1">
-                          <div className="font-bold flex items-center gap-1.5">
-                            <span>RECOMMANDATIONS PSYCHOTROPES (LÉGISLATION TUNISIENNE)</span>
-                            <span className="px-1.5 py-0.5 bg-violet-100 border border-violet-200 text-[9px] font-bold text-violet-800 rounded">Tableau A / Réglementé</span>
-                          </div>
-                          <p className="mt-1 text-slate-700 text-xs">
-                            Cette ordonnance comporte des substances psychotropes réglementées (Tableau A). Conformément au décret tunisien :
-                          </p>
-                          <ul className="mt-1 list-disc list-inside text-[11px] text-slate-600 space-y-0.5 pl-1.5">
-                            <li>La durée maximale de prescription pour chaque ligne est de <strong>28 jours</strong> (Contrôlé au moment de signer).</li>
-                            <li>Il est fortement conseillé d'écrire le nombre d'unités et de boîtes en toutes lettres dans les instructions.</li>
-                            <li>Nécessite la présentation de l'ordonnance originale sécurisée bilingue en pharmacie.</li>
-                          </ul>
-                        </div>
+                    ) : (
+                      <div className="p-4 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-center text-slate-400">
+                        <Check className="w-6 h-6 text-emerald-500 mb-1" />
+                        <span className="text-[10px] font-bold uppercase text-slate-500">Aucun Risque Majeur Détecté</span>
+                        <p className="text-[10px] max-w-[200px] mt-0.5 leading-snug">Aucune allergie ni interaction critique n'a été signalée.</p>
                       </div>
                     )}
+
+                    {/* Column 2: Precautions & Doublements & psychotropes */}
+                    <div className="space-y-3">
+                      {/* Overlaps & Moderate Interactions */}
+                      {(detectedOverlaps.length > 0 || detectedInteractions.some(int => int.severity !== 'critical')) && (
+                        <div className="p-3 bg-amber-50/60 border border-amber-100 rounded-xl space-y-2.5">
+                          <div className="flex items-center gap-1.5 text-amber-800 font-bold uppercase text-[10px] tracking-wider">
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span>🟠 Précautions & Redondances</span>
+                          </div>
+                          <div className="space-y-2 divide-y divide-amber-100/50">
+                            {/* Overlaps */}
+                            {detectedOverlaps.map((overlap, idx) => (
+                              <div key={`ov-${idx}`} className="pt-2 first:pt-0 flex items-start gap-2 text-amber-950">
+                                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                <div className="flex-1">
+                                  <div className="font-bold flex items-center justify-between">
+                                    <span>Doublement : {overlap.substance}</span>
+                                    <span className="text-[8px] bg-amber-100 text-amber-800 font-bold px-1 rounded">Overdose</span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-600 mt-0.5">
+                                    Substance prescrite plusieurs fois : <strong className="text-amber-700">{overlap.medicineALabel}</strong> et <strong className="text-amber-700">{overlap.medicineBLabel}</strong>.
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+
+                            {/* Moderate Interactions */}
+                            {detectedInteractions.filter(int => int.severity !== 'critical').map((int, idx) => (
+                              <div key={`int-mod-${idx}`} className="pt-2 flex items-start gap-2 text-amber-950">
+                                <Activity className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                <div className="flex-1">
+                                  <div className="font-bold flex items-center justify-between">
+                                    <span>Précaution : {int.title_fr}</span>
+                                    <span className="text-[8px] bg-amber-100 text-amber-800 font-bold px-1 rounded">Suivi</span>
+                                  </div>
+                                  <p className="font-semibold text-amber-900 text-[10px] mt-0.5">
+                                    {int.medicineALabel} ↔ {int.medicineBLabel}
+                                  </p>
+                                  <p className="text-slate-600 text-[10px] mt-0.5 italic">{int.description_fr}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Psychotropics Regulatory Block */}
+                      {items.some(item => medicines.find((m) => m.id === item.medicine_id)?.requires_special_prescription) && (
+                        <div className="p-3 bg-violet-50/60 border border-violet-100 rounded-xl space-y-2">
+                          <div className="flex items-center gap-1.5 text-violet-800 font-bold uppercase text-[10px] tracking-wider">
+                            <Scale className="w-4 h-4 text-violet-600 shrink-0 mt-0.5 animate-pulse" />
+                            <span>🟣 Législation Psychotropes (Tableau A)</span>
+                          </div>
+                          <div className="text-[11px] text-violet-950 space-y-1">
+                            <p className="font-semibold">Substance sous surveillance réglementaire tunisienne :</p>
+                            <ul className="list-disc list-inside text-slate-600 text-[10px] space-y-0.5 pl-1">
+                              <li>Limitation stricte à <strong>28 jours de traitement</strong> par ligne.</li>
+                              <li>Écrire obligatoirement les doses et boîtes en toutes lettres.</li>
+                              <li>Le pharmacien exigera l'original sécurisé bilingue.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -910,6 +952,19 @@ export default function PrescriptionForm({
                               className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
                               placeholder="Ex: 1 gélule"
                             />
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {["1 comp.", "2 comp.", "1 gélule", "1 sachet", "1 mesure"].map((badge) => (
+                                <button
+                                  key={badge}
+                                  type="button"
+                                  disabled={isFormLocked}
+                                  onClick={() => handleLineChange(index, 'dosage', badge.replace('comp.', 'comprimé'))}
+                                  className="text-[9px] px-1.5 py-0.5 bg-slate-50 text-slate-500 rounded border border-slate-200/40 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-colors cursor-pointer"
+                                >
+                                  {badge}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                           <div>
                             <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Fréquence</label>
@@ -922,6 +977,28 @@ export default function PrescriptionForm({
                               className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
                               placeholder="Ex: 3 fois par jour"
                             />
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {["1x/j (matin)", "2x/j (M-S)", "3x/j (M-M-S)", "toutes 8h", "si besoin"].map((badge) => (
+                                <button
+                                  key={badge}
+                                  type="button"
+                                  disabled={isFormLocked}
+                                  onClick={() => {
+                                    const valMap: Record<string, string> = {
+                                      "1x/j (matin)": "1 fois par jour (le matin)",
+                                      "2x/j (M-S)": "2 fois par jour (matin et soir)",
+                                      "3x/j (M-M-S)": "3 fois par jour (matin, midi et soir)",
+                                      "toutes 8h": "toutes les 8 heures",
+                                      "si besoin": "en cas de besoin"
+                                    };
+                                    handleLineChange(index, 'frequency', valMap[badge] || badge);
+                                  }}
+                                  className="text-[9px] px-1.5 py-0.5 bg-slate-50 text-slate-500 rounded border border-slate-200/40 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-colors cursor-pointer"
+                                >
+                                  {badge}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                           <div>
                             <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Durée</label>
@@ -934,6 +1011,29 @@ export default function PrescriptionForm({
                               className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
                               placeholder="Ex: 6 jours"
                             />
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {["5 j", "7 j", "10 j", "1 mois", "3 mois", "À vie"].map((badge) => (
+                                <button
+                                  key={badge}
+                                  type="button"
+                                  disabled={isFormLocked}
+                                  onClick={() => {
+                                    const valMap: Record<string, string> = {
+                                      "5 j": "5 jours",
+                                      "7 j": "7 jours",
+                                      "10 j": "10 jours",
+                                      "1 mois": "1 mois",
+                                      "3 mois": "3 mois",
+                                      "À vie": "À vie"
+                                    };
+                                    handleLineChange(index, 'duration', valMap[badge] || badge);
+                                  }}
+                                  className="text-[9px] px-1.5 py-0.5 bg-slate-50 text-slate-500 rounded border border-slate-200/40 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-colors cursor-pointer"
+                                >
+                                  {badge}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                           <div>
                             <label className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Quantité (Boites)</label>
@@ -946,6 +1046,19 @@ export default function PrescriptionForm({
                               className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
                               placeholder="Ex: 2 Boites"
                             />
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {["1 Boite", "2 Boites", "3 Boites", "QSP 1 mois"].map((badge) => (
+                                <button
+                                  key={badge}
+                                  type="button"
+                                  disabled={isFormLocked}
+                                  onClick={() => handleLineChange(index, 'quantity', badge)}
+                                  className="text-[9px] px-1.5 py-0.5 bg-slate-50 text-slate-500 rounded border border-slate-200/40 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-colors cursor-pointer"
+                                >
+                                  {badge}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         </div>
 

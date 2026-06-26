@@ -96,6 +96,15 @@ export interface CurrentMedication {
   dci_name?: string;      // DCI (active ingredient)
 }
 
+export interface VitalRecord {
+  id: string;
+  date: string;
+  weight?: number; // in kg
+  blood_pressure?: string; // e.g. "120/80"
+  heart_rate?: number; // bpm
+  notes?: string;
+}
+
 export interface Patient {
   id: string;
   name_first: string;
@@ -109,6 +118,7 @@ export interface Patient {
   has_hepatic_impairment?: boolean;
   phone?: string;
   current_medications?: CurrentMedication[];
+  vitals_history?: VitalRecord[];
 }
 
 export interface Prescription {
