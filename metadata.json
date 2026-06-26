@@ -1,0 +1,6 @@
+{
+  "name": "OrdoMed TN",
+  "description": "Logiciel de gestion et de prescription d'ordonnances bilingues (Français/Arabe) conforme aux normes de la Pharmacie Centrale de Tunisie.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Safely look up the user document
+    function getUserDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    // Check if the user is a secretary for a specific doctor
+    function isSecretaryOf(doctorUid) {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserDoc(request.auth.uid).role == 'secretary' && 
+             getUserDoc(request.auth.uid).doctorUid == doctorUid;
+    }
+
+    // Check if user is either the doctor or their authorized secretary
+    function isAuthorizedDoctorOrSecretary(doctorUid) {
+      return isOwner(doctorUid) || isSecretaryOf(doctorUid);
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128;
+    }
+
+    // Validation functions
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() <= 256 &&
+             data.role in ['doctor', 'secretary'] &&
+             data.doctorUid is string && data.doctorUid.size() <= 128;
+    }
+
+    function isValidDoctorConfig(data) {
+      return data.name_fr is string && data.name_fr.size() <= 256 &&
+             data.name_ar is string && data.name_ar.size() <= 256 &&
+             data.specialty_fr is string && data.specialty_fr.size() <= 256 &&
+             data.specialty_ar is string && data.specialty_ar.size() <= 256 &&
+             data.order_number is string && data.order_number.size() <= 128 &&
+             data.address_fr is string && data.address_fr.size() <= 512 &&
+             data.address_ar is string && data.address_ar.size() <= 512 &&
+             data.phone is string && data.phone.size() <= 64;
+    }
+
+    function isValidPatient(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.doctorUid is string && data.doctorUid.size() <= 128 &&
+             data.name_first is string && data.name_first.size() <= 128 &&
+             data.name_last is string && data.name_last.size() <= 128 &&
+             data.birth_date is string && data.birth_date.size() <= 64 &&
+             data.gender in ['M', 'F'] &&
+             data.allergies is list && data.allergies.size() <= 50;
+    }
+
+    function isValidPrescription(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.doctorUid is string && data.doctorUid.size() <= 128 &&
+             data.patient_id is string && data.patient_id.size() <= 128 &&
+             data.doctor_id is string && data.doctor_id.size() <= 128 &&
+             data.prescription_number is string && data.prescription_number.size() <= 128 &&
+             data.status in ['draft', 'signed', 'cancelled'];
+    }
+
+    function isValidPrescriptionItem(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.doctorUid is string && data.doctorUid.size() <= 128 &&
+             data.prescription_id is string && data.prescription_id.size() <= 128 &&
+             data.medicine_label is string && data.medicine_label.size() <= 256;
+    }
+
+    // 1. Users Collection
+    match /users/{uid} {
+      allow read: if isSignedIn() && (isOwner(uid) || (getUserDoc(request.auth.uid).role == 'doctor' && getUserDoc(uid).doctorUid == request.auth.uid));
+      allow create: if isSignedIn() && isOwner(uid) && isValidUser(request.resource.data);
+      // Only doctors can write secretary configurations or users can update their own non-role profiles
+      allow update: if isSignedIn() && (
+        (isOwner(uid) && request.resource.data.role == resource.data.role && isValidUser(request.resource.data)) ||
+        (getUserDoc(request.auth.uid).role == 'doctor' && request.resource.data.doctorUid == request.auth.uid && isValidUser(request.resource.data))
+      );
+      allow delete: if isSignedIn() && isOwner(uid);
+    }
+
+    // 2. DoctorConfigs Collection
+    match /doctorConfigs/{doctorUid} {
+      allow read: if isSignedIn() && isAuthorizedDoctorOrSecretary(doctorUid);
+      allow create, update: if isSignedIn() && isOwner(doctorUid) && isValidDoctorConfig(request.resource.data);
+      allow delete: if isSignedIn() && isOwner(doctorUid);
+    }
+
+    // 3. Patients Collection
+    match /patients/{patientId} {
+      allow read: if isSignedIn() && isAuthorizedDoctorOrSecretary(resource.data.doctorUid);
+      allow create: if isSignedIn() && isAuthorizedDoctorOrSecretary(request.resource.data.doctorUid) && isValidPatient(request.resource.data);
+      allow update: if isSignedIn() && isAuthorizedDoctorOrSecretary(resource.data.doctorUid) && isAuthorizedDoctorOrSecretary(request.resource.data.doctorUid) && isValidPatient(request.resource.data);
+      allow delete: if isSignedIn() && isOwner(resource.data.doctorUid);
+    }
+
+    // 4. Prescriptions Collection
+    // SECRETARY has NO access to prescriptions
+    match /prescriptions/{prescriptionId} {
+      allow read: if isSignedIn() && isOwner(resource.data.doctorUid);
+      allow create: if isSignedIn() && isOwner(request.resource.data.doctorUid) && isValidPrescription(request.resource.data);
+      allow update: if isSignedIn() && isOwner(resource.data.doctorUid) && isOwner(request.resource.data.doctorUid) && isValidPrescription(request.resource.data) && resource.data.status != 'signed';
+      allow delete: if isSignedIn() && isOwner(resource.data.doctorUid) && resource.data.status != 'signed';
+    }
+
+    // 5. PrescriptionItems Collection
+    // SECRETARY has NO access to prescription items
+    match /prescriptionItems/{prescriptionItemId} {
+      allow read: if isSignedIn() && isOwner(resource.data.doctorUid);
+      allow create: if isSignedIn() && isOwner(request.resource.data.doctorUid) && isValidPrescriptionItem(request.resource.data);
+      allow update: if isSignedIn() && isOwner(resource.data.doctorUid) && isOwner(request.resource.data.doctorUid) && isValidPrescriptionItem(request.resource.data);
+      allow delete: if isSignedIn() && isOwner(resource.data.doctorUid);
+    }
+  }
+}

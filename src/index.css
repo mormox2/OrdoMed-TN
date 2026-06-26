@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@media print {
+  /* Suppress default page headers, footers and backgrounds */
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt;
+    line-height: 1.5;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide entire application navigation, sidebars and controls during print */
+  header, 
+  nav, 
+  button, 
+  .print\:hidden,
+  #patient-selector-widget, 
+  #prescription-history-widget, 
+  #prescription-drafting-form, 
+  #doctor-config-panel,
+  #medicine-importer-container {
+    display: none !important;
+  }
+
+  /* Reset outer container margins and shadow constructs */
+  #prescription-print-container {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Absolute layout print bounds for the A4 medical sheet */
+  #prescription-a4-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+    height: 100% !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Ensure text colors are rich and legible on paper */
+  .text-slate-900, .text-slate-800, .text-slate-950, .text-slate-700 {
+    color: #000000 !important;
+  }
+
+  .text-sky-700 {
+    color: #0369a1 !important; /* Keep a deep blue hue for the specialty if possible */
+  }
+
+  .text-indigo-700, .text-indigo-600 {
+    color: #4338ca !important; /* Keep the seal of the doctor visible and colored */
+  }
+
+  .border-slate-200\/60, .border-slate-100 {
+    border-color: #e2e8f0 !important;
+  }
+}
