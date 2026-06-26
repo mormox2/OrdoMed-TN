@@ -27,16 +27,21 @@ Dr Rtimi Mossaab
 * **Prise en charge CNAM (APCI / ALD)** : Case à cocher dédiée pour les traitements à 100% (Affections de Longue Durée). L'activation de l'APCI fait apparaître automatiquement le **Code CNAM unique du médecin** sur l'ordonnance imprimée.
 * **Limitation Légale des Psychotropes (Tableau A)** : Les substances contrôlées (ex: Alprazolam) sont bridées à une durée maximale légale de **28 jours** (loi tunisienne sur les stupéfiants et psychotropes). La signature de l'ordonnance est strictement bloquée au-delà de cette durée, invitant le praticien à adapter sa prescription.
 
-### 5. Personnalisation & Cachet Officiel Virtuel
+### 5. Intégration de la Base de Données PCT (6000+ Médicaments)
+* **Base de données PCT officielle intégrée** : Plus de 6000 spécialités pharmaceutiques de la Pharmacie Centrale de Tunisie (PCT) sont incluses par défaut et accessibles hors-ligne instantanément.
+* **Données médicales complètes** : Dénomination Commune Internationale (DCI), dosage, forme pharmaceutique, présentation, laboratoire fabricant, numéro d'AMM, classe et sous-classe thérapeutique.
+* **Sécurité réglementaire automatisée** : Identification des médicaments du **Tableau B** (psychotropes) pour appliquer automatiquement le verrouillage légal de prescription de 28 jours maximum.
+
+### 6. Personnalisation & Cachet Officiel Virtuel
 * **Profil Médecin Complet** : Configuration des informations légales (Nom, spécialité bilingue, adresse, téléphone, matricule fiscal, numéro d'inscription à l'Ordre des Médecins, Code CNAM).
 * **Simulation de Cachet Violet** : Génération visuelle du cachet officiel rond traditionnel (encre violette) du cabinet médical.
 * **Contrôle d'Affichage** : Option pour afficher ou masquer l'impression du cachet automatique (utile pour les praticiens utilisant déjà du papier à en-tête ou des carnets à souche pré-imprimés).
 
-### 6. Impression Optimisée (Formats A4 et A5)
+### 7. Impression Optimisée (Formats A4 et A5)
 * Rendu haute fidélité optimisé pour l'impression physique ou l'export PDF.
 * Options de mise en page réactives pour s'adapter parfaitement aux dimensions classiques d'ordonnances médicales (**A4** ou demi-feuille **A5**).
 
-### 7. Gestion Multi-Comptes & Secrétariat Connecté
+### 8. Gestion Multi-Comptes & Secrétariat Connecté
 * **Restriction de l'inscription** : Seul un médecin peut s'enregistrer initialement et posséder le compte principal du cabinet.
 * **Comptes Secrétaires Annexes** : Depuis son espace de travail, le médecin peut ajouter et lier des comptes de secrétariat en saisissant leur adresse e-mail.
 * **Validation Automatique & Immédiate** : Le médecin peut définir un mot de passe d'accès direct lors de la création du compte secrétaire (ou opter pour l'authentification Google). Le compte de la secrétaire est validé automatiquement dès sa création, lui évitant toute période d'attente ou statut suspendu, et lui permettant de s'authentifier immédiatement pour gérer les dossiers patients.
