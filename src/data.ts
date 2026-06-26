@@ -13,6 +13,7 @@ import {
   AuditLog,
   DoctorConfig,
 } from './types';
+import pctMedications from './pct_medications.json';
 
 // Helper to remove French accents
 export function removeAccents(str: string): string {
@@ -371,7 +372,8 @@ export const INITIAL_MEDICINES: Medicine[] = [
     is_available: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  }
+  },
+  ...(pctMedications as Medicine[])
 ];
 
 export const INITIAL_DOSAGE_TEMPLATES: DosageTemplate[] = [
