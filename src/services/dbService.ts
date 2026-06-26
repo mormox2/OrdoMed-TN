@@ -59,7 +59,8 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
         address_fr: 'Tunis, Tunisie',
         address_ar: 'تونس، تونس',
         phone: '+216 71 000 000',
-        show_automatic_stamp: true
+        show_automatic_stamp: true,
+        website: ''
       };
       await setDoc(configDocRef, defaultDoctorConfig);
     }
@@ -117,7 +118,8 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
         address_fr: 'Tunis, Tunisie',
         address_ar: 'تونس، تونس',
         phone: '+216 71 000 000',
-        show_automatic_stamp: true
+        show_automatic_stamp: true,
+        website: ''
       };
       await setDoc(configDocRef, defaultDoctorConfig);
     }

@@ -54,6 +54,7 @@ export const DEFAULT_DOCTOR_CONFIG: DoctorConfig = {
   footer_ar: 'يرجى تقديم هذه الوصفة في كل زيارة. صالحة لمدة 3 أشهر.',
   stamp_text: 'Cabinet Médical\nDr. Anis Ben Youssef\nCardiologie - Tunis\nN° Ordre: TN-2026-9482',
   show_automatic_stamp: true,
+  website: 'https://cabinet-anis-benyoussef.tn',
 };
 
 export const INITIAL_PATIENTS: Patient[] = [

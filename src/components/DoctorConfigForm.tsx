@@ -269,6 +269,18 @@ export default function DoctorConfigForm({ config, onSave }: DoctorConfigFormPro
             </div>
 
             <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1.5">Site Web du Cabinet (Optionnel)</label>
+              <input
+                type="text"
+                name="website"
+                value={formData.website || ''}
+                onChange={handleChange}
+                className="w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
+                placeholder="Ex: https://cabinet-anis-benyoussef.tn"
+              />
+            </div>
+
+            <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">Texte personnalisé du cachet officiel</label>
               <textarea
                 name="stamp_text"

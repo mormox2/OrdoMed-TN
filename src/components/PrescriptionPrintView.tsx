@@ -20,7 +20,7 @@ export default function PrescriptionPrintView({
   doctorConfig,
   onBack,
 }: PrescriptionPrintViewProps) {
-  const [format, setFormat] = useState<'A4' | 'A5'>('A4');
+  const [format, setFormat] = useState<'A4' | 'A5'>('A5');
   const [margin, setMargin] = useState<'small' | 'medium' | 'large'>('medium'); // small: 10mm, medium: 15mm, large: 20mm
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg'>('base'); // sm: small, base: standard, lg: large
   const [hideHeader, setHideHeader] = useState<boolean>(false);
@@ -48,22 +48,47 @@ export default function PrescriptionPrintView({
   const activeMargin = marginMap[margin];
   const activeFont = fontSizeMap[fontSize];
 
-  // Simulated SVG QR Code for prescription authenticity validation (incorporates doctor/prescription metadata)
+  // Generates a real QR Code that outputs a vCard contact file so scanners can instantly add the doctor to their directory
+  const getVCardQrCodeUrl = () => {
+    const cleanFrName = (doctorConfig.name_fr || '').replace(/[\n\r]/g, ' ');
+    const cleanFrSpecialty = (doctorConfig.specialty_fr || '').replace(/[\n\r]/g, ' ');
+    const cleanPhone = (doctorConfig.phone || '').replace(/[\n\r]/g, ' ');
+    const cleanEmail = (doctorConfig.email || '').replace(/[\n\r]/g, ' ');
+    const cleanAddress = (doctorConfig.address_fr || '').replace(/[\n\r]/g, ' ');
+    const cleanWebsite = (doctorConfig.website || '').replace(/[\n\r]/g, ' ');
+
+    const vCardData = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      `FN:${cleanFrName}`,
+      `ORG:${cleanFrSpecialty}`,
+      `TEL;TYPE=WORK,VOICE:${cleanPhone}`,
+    ];
+
+    if (cleanEmail) {
+      vCardData.push(`EMAIL;TYPE=PREF,INTERNET:${cleanEmail}`);
+    }
+    if (cleanAddress) {
+      vCardData.push(`ADR;TYPE=WORK:;;${cleanAddress};;;;`);
+    }
+    if (cleanWebsite) {
+      vCardData.push(`URL:${cleanWebsite}`);
+    }
+
+    vCardData.push('END:VCARD');
+    const vCardString = vCardData.join('\n');
+    return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(vCardString)}`;
+  };
+
+  // Simulated SVG QR Code fallback or direct QR rendering
   const renderVerificationQrCode = () => {
     return (
-      <svg 
-        className={`${isA5 ? 'w-10 h-10' : 'w-12 h-12'} text-slate-800 transition-all shrink-0`} 
-        viewBox="0 0 29 29" 
-        fill="currentColor" 
-        shapeRendering="crispEdges"
-      >
-        {/* QR Code borders & static alignment blocks */}
-        <path d="M0 0h7v7H0zm22 0h7v7h-7zM0 22h7v7H0z" />
-        <path d="M2 2h3v3H2zm20 0h3v3h-3zM2 24h3v3H2z" />
-        {/* Pseudo-random matrix pattern based on prescription id hash */}
-        <path d="M9 1h1v2H9zm3 0h4v1h-4zm5 0h2v1h-2zm1 2h1v3h-1zm-6 2h3v1h-3zm8 0h1v1h-1zm-9 2h2v1h-2zm3 0h1v4h-1zm4 1h1v1h-1zm4 0h1v3h-1zm-9 2h1v1h-1zm7 0h2v1h-2zm-6 2h1v1h-1zm3 0h2v1h-2zm5 0h1v2h-1zm-9 2h2v1h-2zm4 0h2v1h-2zm6 0h1v1h-1zm-9 2h3v1h-3zm5 0h2v1h-2zm4 0h3v1h-3z" />
-        <path d="M10 10h1v1h-1zm3 0h1v1h-1zm4 0h2v1h-2zm1 2h1v2h-1zm-5 1h2v1h-2zm5 1h1v1h-1zm-6 2h1v1h-1zm4 0h1v2h-1zm4 0h2v1h-2zm-9 2h2v1h-2zm6 0h1v1h-1z" />
-      </svg>
+      <img 
+        src={getVCardQrCodeUrl()} 
+        alt="QR Contact"
+        className={`${isA5 ? 'w-11 h-11' : 'w-14 h-14'} border border-slate-200/50 p-0.5 rounded-lg bg-white transition-all shrink-0`}
+        referrerPolicy="no-referrer"
+      />
     );
   };
 

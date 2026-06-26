@@ -33,13 +33,14 @@ Dr Rtimi Mossaab
 * **Sécurité réglementaire automatisée** : Identification des médicaments du **Tableau B** (psychotropes) pour appliquer automatiquement le verrouillage légal de prescription de 28 jours maximum.
 
 ### 6. Personnalisation & Cachet Officiel Virtuel
-* **Profil Médecin Complet** : Configuration des informations légales (Nom, spécialité bilingue, adresse, téléphone, matricule fiscal, numéro d'inscription à l'Ordre des Médecins, Code CNAM).
+* **Profil Médecin Complet** : Configuration des informations légales (Nom, spécialité bilingue, adresse, téléphone, matricule fiscal, numéro d'inscription à l'Ordre des Médecins, Code CNAM, et **Site Web du cabinet**).
 * **Simulation de Cachet Violet** : Génération visuelle du cachet officiel rond traditionnel (encre violette) du cabinet médical.
 * **Contrôle d'Affichage** : Option pour afficher ou masquer l'impression du cachet automatique (utile pour les praticiens utilisant déjà du papier à en-tête ou des carnets à souche pré-imprimés).
 
-### 7. Impression Optimisée (Formats A4 et A5)
+### 7. Impression Optimisée (Format A5 par défaut et A4)
+* **Format A5 par Défaut** : L'ordonnance s'affiche et s'imprime par défaut au format **demi-feuille (A5)**, avec une option en un clic pour basculer sur le format **Standard (A4)** selon le support papier disponible.
+* **QR Code Interactif de Contact (vCard)** : Intégration d'un **vrai QR Code dans le pied de page** de l'ordonnance. Lors du scan avec l'appareil photo d'un smartphone, il déclenche instantanément l'ajout du médecin dans le répertoire de contacts (contenant son Nom, spécialité, téléphone, e-mail, adresse, et site internet officiel).
 * Rendu haute fidélité optimisé pour l'impression physique ou l'export PDF.
-* Options de mise en page réactives pour s'adapter parfaitement aux dimensions classiques d'ordonnances médicales (**A4** ou demi-feuille **A5**).
 
 ### 8. Gestion Multi-Comptes & Secrétariat Connecté
 * **Restriction de l'inscription** : Seul un médecin peut s'enregistrer initialement et posséder le compte principal du cabinet.

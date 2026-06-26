@@ -194,4 +194,5 @@ export interface DoctorConfig {
   stamp_text?: string;
   logo_url?: string;
   show_automatic_stamp?: boolean;
+  website?: string;
 }
