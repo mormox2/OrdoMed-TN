@@ -1,11 +1,28 @@
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut as secondarySignOut } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import localConfig from '../firebase-applet-config.json';
+
+// Support production override via Vercel / Netlify environment variables
+const metaEnv = (import.meta as any).env || {};
+
+const firebaseConfig = {
+  apiKey: metaEnv.VITE_FIREBASE_API_KEY || localConfig.apiKey,
+  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain,
+  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID || localConfig.projectId,
+  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket,
+  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId,
+  appId: metaEnv.VITE_FIREBASE_APP_ID || localConfig.appId,
+  firestoreDatabaseId: metaEnv.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId || "(default)"
+};
 
 const app = initializeApp(firebaseConfig);
-// CRITICAL: The app will break without specifying the correct databaseId
-export const dbFirestore = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// CRITICAL: The app will break without specifying the correct databaseId if it is a named database.
+// For default databases, we can use the default getFirestore(app) call.
+export const dbFirestore = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)"
+  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+  : getFirestore(app);
 export const db = dbFirestore; // Maintain both exports just in case
 export const auth = getAuth();
 
