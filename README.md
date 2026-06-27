@@ -42,7 +42,12 @@ Dr Rtimi Mossaab
 * **QR Code Interactif de Contact (vCard)** : Intégration d'un **vrai QR Code dans le pied de page** de l'ordonnance. Lors du scan avec l'appareil photo d'un smartphone, il déclenche instantanément l'ajout du médecin dans le répertoire de contacts (contenant son Nom, spécialité, téléphone, e-mail, adresse, et site internet officiel).
 * Rendu haute fidélité optimisé pour l'impression physique ou l'export PDF.
 
-### 8. Gestion Multi-Comptes & Secrétariat Connecté
+### 8. Application Web Progressive (PWA) Installable
+* **Installation Multi-plateforme** : Entièrement compatible PWA (Progressive Web App). L'application peut être installée en un clic comme un logiciel natif sur Windows, macOS, Android et iOS.
+* **Fonctionnement Hors-Ligne & Cache** : Les fichiers d'interface essentiels (assets, scripts, styles) sont gérés par un Service Worker intelligent pour assurer un lancement ultra-rapide et l'accès à l'application même sans connexion internet stable.
+* **Intégration au Système** : Raccourci sur l'écran d'accueil/bureau, lancement en mode autonome sans barre de navigation de navigateur, et respect du thème de couleur médical soigné.
+
+### 9. Gestion Multi-Comptes & Secrétariat Connecté
 * **Restriction de l'inscription** : Seul un médecin peut s'enregistrer initialement et posséder le compte principal du cabinet.
 * **Comptes Secrétaires Annexes** : Depuis son espace de travail, le médecin peut ajouter et lier des comptes de secrétariat en saisissant leur adresse e-mail.
 * **Validation Automatique & Immédiate** : Le médecin peut définir un mot de passe d'accès direct lors de la création du compte secrétaire (ou opter pour l'authentification Google). Le compte de la secrétaire est validé automatiquement dès sa création, lui évitant toute période d'attente ou statut suspendu, et lui permettant de s'authentifier immédiatement pour gérer les dossiers patients.
