@@ -1,6 +1,6 @@
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut as secondarySignOut } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import localConfig from '../firebase-applet-config.json';
 
 // Support production override via Vercel / Netlify environment variables
@@ -18,11 +18,16 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// CRITICAL: The app will break without specifying the correct databaseId if it is a named database.
-// For default databases, we can use the default getFirestore(app) call.
-export const dbFirestore = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)"
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
-  : getFirestore(app);
+// CRITICAL: We use initializeFirestore with experimentalForceLongPolling to prevent infinite hangs
+// in restricted networks, sandboxed iframes (like AI Studio preview), or strict browser/adblock settings.
+const dbId = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== "(default)"
+  ? firebaseConfig.firestoreDatabaseId
+  : undefined;
+
+export const dbFirestore = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, dbId);
+
 export const db = dbFirestore; // Maintain both exports just in case
 export const auth = getAuth();
 
