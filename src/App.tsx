@@ -76,6 +76,26 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Helper to retry setup user profile
+  const handleRetryAuth = async () => {
+    if (!user) return;
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      const profile = await setupUserAndGetProfile(user.uid, user.email || '');
+      setUserProfile(profile);
+      if (profile.role === 'secretary') {
+        setActiveTab('prescription');
+      }
+    } catch (err: any) {
+      console.error('Failed to set up user profile on retry:', err);
+      setAuthError(err?.message || "Erreur d'accès à la base de données sécurisée. Veuillez vérifier vos permissions.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   // Global Database State
   const [db, setDb] = useState(getDbState());
@@ -105,6 +125,7 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       setAuthLoading(true);
+      setAuthError(null);
       if (currentUser) {
         setUser(currentUser);
         try {
@@ -114,8 +135,9 @@ export default function App() {
           if (profile.role === 'secretary') {
             setActiveTab('prescription');
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error('Failed to set up user profile:', err);
+          setAuthError(err?.message || "Erreur d'accès à la base de données sécurisée. Veuillez vérifier vos permissions.");
         }
       } else {
         setUser(null);
@@ -589,6 +611,42 @@ export default function App() {
       </header>
     );
   };
+
+  if (authError && user && !userProfile && !authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-slate-100 p-8 shadow-md text-center animate-fade-in">
+          <div className="inline-flex p-3 bg-rose-50 rounded-full text-rose-500 mb-4">
+            <ShieldAlert className="w-10 h-10" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">Chargement sécurisé impossible</h2>
+          <p className="text-sm text-slate-600 mb-6">
+            Une erreur est survenue lors de la récupération ou de l'initialisation de votre profil de sécurité :
+            <br />
+            <span className="font-mono text-rose-600 block bg-rose-50 p-2.5 rounded-lg mt-2 text-xs text-left overflow-auto max-h-24">
+              {authError}
+            </span>
+          </p>
+          <div className="flex flex-col space-y-2">
+            <button
+              onClick={handleRetryAuth}
+              className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-medium transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Activity className="w-4 h-4 animate-pulse" />
+              Réessayer
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              Se déconnecter
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (authLoading || (user && !userProfile)) {
     return (
