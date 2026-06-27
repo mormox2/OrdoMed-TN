@@ -75,8 +75,14 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
     }
 
     // 2. Check if a pre-registered secretary email doc exists
-    const emailSnap = await getDoc(emailDocRef);
-    if (emailSnap.exists()) {
+    let emailSnap = null;
+    try {
+      emailSnap = await getDoc(emailDocRef);
+    } catch (e) {
+      console.warn("Notice: Check for secretary email invitation restricted by Firestore rules (safe to ignore for doctors):", e);
+    }
+
+    if (emailSnap && emailSnap.exists()) {
       const emailData = emailSnap.data();
       const profile: UserProfile = {
         uid,
