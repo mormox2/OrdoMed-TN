@@ -74,19 +74,27 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
       return userSnap.data() as UserProfile;
     }
 
-    // 2. Check if a pre-registered secretary email doc exists
+    // 2. Check if a pre-registered secretary email doc exists (only if email is valid and looks like an email)
+    const normalizedEmail = email.toLowerCase().trim();
+    let isSecretaryInvitation = false;
     let emailSnap = null;
-    try {
-      emailSnap = await getDoc(emailDocRef);
-    } catch (e) {
-      console.warn("Notice: Check for secretary email invitation restricted by Firestore rules (safe to ignore for doctors):", e);
+
+    if (normalizedEmail && normalizedEmail.includes('@') && normalizedEmail !== uid) {
+      try {
+        emailSnap = await getDoc(emailDocRef);
+        if (emailSnap && emailSnap.exists()) {
+          isSecretaryInvitation = true;
+        }
+      } catch (e) {
+        console.warn("Notice: Check for secretary email invitation restricted by Firestore rules (safe to ignore for doctors):", e);
+      }
     }
 
-    if (emailSnap && emailSnap.exists()) {
+    if (isSecretaryInvitation && emailSnap && emailSnap.exists()) {
       const emailData = emailSnap.data();
       const profile: UserProfile = {
         uid,
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         role: 'secretary',
         doctorUid: emailData.doctorUid,
         createdAt: new Date().toISOString()
@@ -103,7 +111,7 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
     // 3. New User -> Default to Doctor
     const newProfile: UserProfile = {
       uid,
-      email: email.toLowerCase(),
+      email: normalizedEmail || `doctor_${uid.substring(0, 5)}@example.com`,
       role: 'doctor',
       doctorUid: uid,
       createdAt: new Date().toISOString()
@@ -135,6 +143,54 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
     handleFirestoreError(error, OperationType.WRITE, `users/${uid}`);
     throw error;
   }
+}
+
+/**
+ * Force-register a user explicitly as a doctor.
+ * This is the radical fix to prevent any new user from being identified as a secretary by default.
+ */
+export async function registerNewDoctor(uid: string, email: string): Promise<UserProfile> {
+  const userDocRef = doc(db, 'users', uid);
+  const normalizedEmail = email.toLowerCase().trim();
+  const emailDocRef = doc(db, 'users', `email:${normalizedEmail}`);
+  
+  const profile: UserProfile = {
+    uid,
+    email: normalizedEmail,
+    role: 'doctor',
+    doctorUid: uid,
+    createdAt: new Date().toISOString()
+  };
+  
+  await setDoc(userDocRef, profile);
+  
+  // Try to delete any accidental temporary invitation
+  try {
+    await deleteDoc(emailDocRef);
+  } catch (e) {
+    // Ignore if not allowed or not found
+  }
+  
+  // Also initialize default doctor config if it doesn't exist
+  const configDocRef = doc(db, 'doctorConfigs', uid);
+  const configSnap = await getDoc(configDocRef);
+  if (!configSnap.exists()) {
+    const defaultDoctorConfig: DoctorConfig = {
+      name_fr: 'Cabinet Médical',
+      name_ar: 'العيادة الطبية',
+      specialty_fr: 'Médecin Généraliste',
+      specialty_ar: 'طب عام',
+      order_number: 'TN-2026-0000',
+      address_fr: 'Tunis, Tunisie',
+      address_ar: 'تونس، تونس',
+      phone: '+216 71 000 000',
+      show_automatic_stamp: true,
+      website: ''
+    };
+    await setDoc(configDocRef, defaultDoctorConfig);
+  }
+  
+  return profile;
 }
 
 /**

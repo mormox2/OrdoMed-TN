@@ -185,9 +185,15 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
           </div>
 
           <div className="flex items-center justify-between gap-4 pt-2">
-            <p className="text-[10px] text-slate-400 max-w-xl">
-              💡 <strong>Sélection automatique :</strong> Si vous indiquez un mot de passe, un compte authentifié autonome est immédiatement créé. Sinon, la secrétaire s'identifiera directement via son compte Google. Dans les deux cas, le compte est validé instantanément et n'est pas mis en attente.
-            </p>
+            <div className="text-[11px] text-slate-500 max-w-xl space-y-1">
+              <p>
+                ⚡ <strong>Validation automatique et instantanée :</strong> Aucun e-mail d'invitation n'est nécessaire. Le compte de la secrétaire est activé immédiatement. 
+                Si vous indiquez un mot de passe, elle s'identifie avec l'e-mail et le mot de passe. Sinon, elle s'identifie avec son compte Google.
+              </p>
+              <p className="text-right text-[10px] text-slate-400 font-medium" dir="rtl">
+                ⚡ <strong>تفعيل فوري وتلقائي للحساب :</strong> لا داعي لإرسال أو تفعيل عبر البريد الإلكتروني. الحساب يُنشأ ويُفعّل مباشرةً. بإمكان السكرتيرة الدخول فوراً باستخدام حسابها أو كلمة المرور المعينة.
+              </p>
+            </div>
             <button
               type="submit"
               disabled={actionLoading || !emailInput}
