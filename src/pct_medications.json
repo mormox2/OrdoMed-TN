@@ -56851,3 +56851,8 @@
     "therapeutic_class": "SYSTEME RESPIRATOIRE - MEDICAMENTS DE LA TOUX ET DU RHUME",
     "status": "active",
     "is_available": true,
+    "requires_special_prescription": false,
+    "created_at": "2026-06-27T21:52:02.521Z",
+    "updated_at": "2026-06-27T21:52:02.521Z"
+  }
+]

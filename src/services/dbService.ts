@@ -79,7 +79,20 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
     let isSecretaryInvitation = false;
     let emailSnap = null;
 
-    if (normalizedEmail && normalizedEmail.includes('@') && normalizedEmail !== uid) {
+    // Direct check of signup flag to bypass secretary matching and force doctor role
+    let isSigningUpAsDoctor = false;
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        if (sessionStorage.getItem('is_signing_up_as_doctor') === 'true') {
+          isSigningUpAsDoctor = true;
+          sessionStorage.removeItem('is_signing_up_as_doctor');
+        }
+      }
+    } catch (e) {
+      // Safe fallback
+    }
+
+    if (!isSigningUpAsDoctor && normalizedEmail && normalizedEmail.includes('@') && normalizedEmail !== uid) {
       try {
         emailSnap = await getDoc(emailDocRef);
         if (emailSnap && emailSnap.exists()) {

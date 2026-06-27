@@ -191,6 +191,13 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
         }
       } else {
         // Sign Up
+        try {
+          if (typeof window !== 'undefined' && window.sessionStorage) {
+            sessionStorage.setItem('is_signing_up_as_doctor', 'true');
+          }
+        } catch (e) {
+          // Ignore sessionStorage limitations if any
+        }
         const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
         if (result.user) {
           try {
