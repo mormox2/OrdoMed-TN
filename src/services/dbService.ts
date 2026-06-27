@@ -24,52 +24,65 @@ export interface UserProfile {
 /**
  * Handle initial user setup when they log in.
  */
+/**
+ * Utility to wrap a promise with a timeout to prevent infinite hanging.
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 8000, errorMessage: string = "La connexion à la base de données sécurisée a expiré. Veuillez rafraîchir la page."): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(errorMessage)), timeoutMs))
+  ]);
+}
+
+/**
+ * Handle initial user setup when they log in.
+ */
 export async function setupUserAndGetProfile(uid: string, email: string): Promise<UserProfile> {
   const userDocRef = doc(db, 'users', uid);
   const emailDocRef = doc(db, 'users', `email:${email.toLowerCase()}`);
 
   const lowercaseEmail = email.toLowerCase().trim();
 
-  // Explicit doctor override for dmossaab@gmail.com
-  if (lowercaseEmail === 'dmossaab@gmail.com') {
-    const profile: UserProfile = {
-      uid,
-      email: lowercaseEmail,
-      role: 'doctor',
-      doctorUid: uid,
-      createdAt: new Date().toISOString()
-    };
-    try {
-      await setDoc(userDocRef, profile);
-      await deleteDoc(emailDocRef);
-    } catch (e) {
-      console.warn("Could not delete secondary invitation for dmossaab@gmail.com:", e);
-    }
-    
-    // Ensure default doctor configuration exists
-    const configDocRef = doc(db, 'doctorConfigs', uid);
-    const configSnap = await getDoc(configDocRef);
-    if (!configSnap.exists()) {
-      const defaultDoctorConfig: DoctorConfig = {
-        name_fr: 'Cabinet Médical',
-        name_ar: 'العيادة الطبية',
-        specialty_fr: 'Médecin Généraliste',
-        specialty_ar: 'طب عام',
-        order_number: 'TN-2026-0000',
-        address_fr: 'Tunis, Tunisie',
-        address_ar: 'تونس، تونس',
-        phone: '+216 71 000 000',
-        show_automatic_stamp: true,
-        website: ''
-      };
-      await setDoc(configDocRef, defaultDoctorConfig);
-    }
-    return profile;
-  }
-
   try {
+    // Explicit doctor override for dmossaab@gmail.com
+    if (lowercaseEmail === 'dmossaab@gmail.com') {
+      const profile: UserProfile = {
+        uid,
+        email: lowercaseEmail,
+        role: 'doctor',
+        doctorUid: uid,
+        createdAt: new Date().toISOString()
+      };
+      try {
+        await withTimeout(setDoc(userDocRef, profile), 8000, "La configuration du profil a expiré.");
+        await withTimeout(deleteDoc(emailDocRef), 8000, "La configuration de l'invitation a expiré.");
+      } catch (e) {
+        console.warn("Could not delete secondary invitation for dmossaab@gmail.com:", e);
+      }
+      
+      // Ensure default doctor configuration exists
+      const configDocRef = doc(db, 'doctorConfigs', uid);
+      const configSnap = await withTimeout(getDoc(configDocRef), 8000, "Le chargement de la configuration du médecin a expiré.");
+      if (!configSnap.exists()) {
+        const defaultDoctorConfig: DoctorConfig = {
+          name_fr: 'Cabinet Médical',
+          name_ar: 'العيادة الطبية',
+          specialty_fr: 'Médecin Généraliste',
+          specialty_ar: 'طب عام',
+          order_number: 'TN-2026-0000',
+          address_fr: 'Tunis, Tunisie',
+          address_ar: 'تونس، تونس',
+          phone: '+216 71 000 000',
+          show_automatic_stamp: true,
+          website: ''
+        };
+        await withTimeout(setDoc(configDocRef, defaultDoctorConfig), 8000, "L'initialisation de la configuration du médecin a expiré.");
+      }
+      return profile;
+    }
+
     // 1. Check if UID doc exists
-    const userSnap = await getDoc(userDocRef);
+    const userSnap = await withTimeout(getDoc(userDocRef), 8000, "Le chargement du profil utilisateur a expiré.");
     if (userSnap.exists()) {
       return userSnap.data() as UserProfile;
     }
@@ -94,7 +107,7 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
 
     if (!isSigningUpAsDoctor && normalizedEmail && normalizedEmail.includes('@') && normalizedEmail !== uid) {
       try {
-        emailSnap = await getDoc(emailDocRef);
+        emailSnap = await withTimeout(getDoc(emailDocRef), 5000, "La vérification d'invitation secrétariat a expiré.");
         if (emailSnap && emailSnap.exists()) {
           isSecretaryInvitation = true;
         }
@@ -114,9 +127,9 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
       };
 
       // Create actual user document
-      await setDoc(userDocRef, profile);
+      await withTimeout(setDoc(userDocRef, profile), 8000, "La création du profil secrétariat a expiré.");
       // Delete the temporary email invitation doc
-      await deleteDoc(emailDocRef);
+      await withTimeout(deleteDoc(emailDocRef), 8000, "La suppression de l'invitation a expiré.");
 
       return profile;
     }
@@ -130,11 +143,11 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
       createdAt: new Date().toISOString()
     };
 
-    await setDoc(userDocRef, newProfile);
+    await withTimeout(setDoc(userDocRef, newProfile), 8000, "La création du profil médecin a expiré.");
 
     // Also initialize default doctor config if it doesn't exist
     const configDocRef = doc(db, 'doctorConfigs', uid);
-    const configSnap = await getDoc(configDocRef);
+    const configSnap = await withTimeout(getDoc(configDocRef), 8000, "La vérification de configuration a expiré.");
     if (!configSnap.exists()) {
       const defaultDoctorConfig: DoctorConfig = {
         name_fr: 'Cabinet Médical',
@@ -148,7 +161,7 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
         show_automatic_stamp: true,
         website: ''
       };
-      await setDoc(configDocRef, defaultDoctorConfig);
+      await withTimeout(setDoc(configDocRef, defaultDoctorConfig), 8000, "La création de configuration médecin a expiré.");
     }
 
     return newProfile;

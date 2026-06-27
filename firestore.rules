@@ -88,8 +88,7 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isSignedIn() && (
         isOwner(uid) || 
-        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).doctorUid == request.auth.uid) || 
-        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).email == request.auth.token.email)
+        (resource != null && (resource.data.doctorUid == request.auth.uid || resource.data.email == request.auth.token.email))
       );
       allow create: if isSignedIn() && (
         isOwner(uid) || 
@@ -97,12 +96,11 @@ service cloud.firestore {
       );
       allow update: if isSignedIn() && (
         isOwner(uid) || 
-        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).doctorUid == request.auth.uid)
+        (resource != null && resource.data.doctorUid == request.auth.uid)
       );
       allow delete: if isSignedIn() && (
         isOwner(uid) || 
-        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).doctorUid == request.auth.uid) || 
-        (exists(/databases/$(database)/documents/users/$(uid)) && getUserDoc(uid).email == request.auth.token.email)
+        (resource != null && resource.data.doctorUid == request.auth.uid)
       );
     }
 
