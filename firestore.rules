@@ -24,16 +24,15 @@ service cloud.firestore {
     // Check if the logged-in user (doctor or secretary) belongs to the specified doctorUid
     function isAuthorizedForDoctor(doctorUid) {
       return isSignedIn() && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             (request.auth.uid == doctorUid || getUserDoc(request.auth.uid).doctorUid == doctorUid);
+             (request.auth.uid == doctorUid || 
+              (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserDoc(request.auth.uid).doctorUid == doctorUid));
     }
 
     // Check if the logged-in user is a doctor and matches the doctorUid
     function isAuthorizedDoctor(doctorUid) {
       return isSignedIn() && 
              request.auth.uid == doctorUid &&
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             getUserDoc(request.auth.uid).role == 'doctor';
+             (!exists(/databases/$(database)/documents/users/$(request.auth.uid)) || getUserDoc(request.auth.uid).role == 'doctor');
     }
 
     function isValidId(id) {

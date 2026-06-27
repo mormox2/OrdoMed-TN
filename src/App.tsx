@@ -549,11 +549,11 @@ export default function App() {
     );
   };
 
-  if (authLoading) {
+  if (authLoading || (user && !userProfile)) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center space-y-3">
         <Loader2 className="w-10 h-10 animate-spin text-teal-600" />
-        <p className="text-sm font-semibold text-slate-600">Chargement de la session sécurisée...</p>
+        <p className="text-sm font-semibold text-slate-600">Chargement du profil sécurisé...</p>
       </div>
     );
   }
@@ -602,6 +602,7 @@ export default function App() {
                 selectedPatient={selectedPatient}
                 onSelectPatient={setSelectedPatient}
                 onPatientsChange={handlePatientsChange}
+                userRole={userProfile?.role || 'doctor'}
               />
 
               {selectedPatient && userProfile?.role === 'doctor' && (

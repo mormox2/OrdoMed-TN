@@ -130,6 +130,7 @@ interface PatientSelectorProps {
   selectedPatient: Patient | null;
   onSelectPatient: (patient: Patient | null) => void;
   onPatientsChange: (newPatients: Patient[]) => void;
+  userRole?: 'doctor' | 'secretary';
 }
 
 export default function PatientSelector({
@@ -137,6 +138,7 @@ export default function PatientSelector({
   selectedPatient,
   onSelectPatient,
   onPatientsChange,
+  userRole = 'doctor',
 }: PatientSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -526,20 +528,22 @@ export default function PatientSelector({
                   >
                     <Edit className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => {
-                      if (confirm('Voulez-vous retirer ce patient ?')) {
-                        const updated = patients.filter((p) => p.id !== selectedPatient.id);
-                        onPatientsChange(updated);
-                        onSelectPatient(null);
-                        logAudit('DELETE_PATIENT', 'PATIENT', selectedPatient.id, selectedPatient, null);
-                      }
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-100 transition-all cursor-pointer"
-                    title="Supprimer le patient"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {userRole === 'doctor' && (
+                    <button
+                      onClick={() => {
+                        if (confirm('Voulez-vous retirer ce patient ?')) {
+                          const updated = patients.filter((p) => p.id !== selectedPatient.id);
+                          onPatientsChange(updated);
+                          onSelectPatient(null);
+                          logAudit('DELETE_PATIENT', 'PATIENT', selectedPatient.id, selectedPatient, null);
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-100 transition-all cursor-pointer"
+                      title="Supprimer le patient"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -576,40 +580,50 @@ export default function PatientSelector({
               {/* Dynamic Warning Badges & Impairment Toggles */}
               <div className="pt-2 flex flex-wrap gap-1.5 border-t border-slate-100">
                 <button
+                  disabled={userRole === 'secretary'}
                   onClick={handleToggleRenal}
-                  className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors flex items-center gap-1 cursor-pointer ${
+                  className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors flex items-center gap-1 ${
+                    userRole === 'secretary' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
+                  } ${
                     selectedPatient.has_renal_impairment
                       ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
                       : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
                   }`}
-                  title="Activer/Désactiver l'insuffisance rénale"
+                  title={userRole === 'secretary' ? "Modification réservée au médecin traitant" : "Activer/Désactiver l'insuffisance rénale"}
                 >
                   <Activity className="w-3 h-3" />
-                  Insuff. Rénale
+                  Insuff. Rénale {selectedPatient.has_renal_impairment ? '⚠️' : ''}
                 </button>
                 <button
+                  disabled={userRole === 'secretary'}
                   onClick={handleToggleHepatic}
-                  className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors flex items-center gap-1 cursor-pointer ${
+                  className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors flex items-center gap-1 ${
+                    userRole === 'secretary' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
+                  } ${
                     selectedPatient.has_hepatic_impairment
                       ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
                       : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
                   }`}
-                  title="Activer/Désactiver l'insuffisance hépatique"
+                  title={userRole === 'secretary' ? "Modification réservée au médecin traitant" : "Activer/Désactiver l'insuffisance hépatique"}
                 >
                   <Activity className="w-3 h-3" />
-                  Insuff. Hépatique
+                  Insuff. Hépatique {selectedPatient.has_hepatic_impairment ? '⚠️' : ''}
                 </button>
                 {selectedPatient.gender === 'F' && (
                   <button
+                    disabled={userRole === 'secretary'}
                     onClick={handleTogglePregnancy}
-                    className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors flex items-center gap-1 cursor-pointer ${
+                    className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors flex items-center gap-1 ${
+                      userRole === 'secretary' ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
+                    } ${
                       selectedPatient.is_pregnant
                         ? 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100'
                         : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
                     }`}
+                    title={userRole === 'secretary' ? "Modification réservée au médecin traitant" : "Activer/Désactiver la grossesse active"}
                   >
                     <Heart className="w-3 h-3" />
-                    Grossesse active
+                    Grossesse active {selectedPatient.is_pregnant ? '👶' : ''}
                   </button>
                 )}
               </div>
@@ -660,294 +674,296 @@ export default function PatientSelector({
               </div>
 
               {/* Clinical Vitals & Trend Analytics Block */}
-              <div className="pt-3 border-t border-slate-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                    <HeartPulse className="w-4 h-4 text-rose-500" />
-                    <span>Constantes & Suivi Clinique :</span>
+              {userRole === 'doctor' && (
+                <div className="pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <HeartPulse className="w-4 h-4 text-rose-500" />
+                      <span>Constantes & Suivi Clinique :</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowVitalsForm(!showVitalsForm);
+                        setVitalError(null);
+                      }}
+                      className="text-[10px] text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 px-2 py-1 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                    >
+                      {showVitalsForm ? 'Fermer' : 'Saisir constantes'}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowVitalsForm(!showVitalsForm);
-                      setVitalError(null);
-                    }}
-                    className="text-[10px] text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 px-2 py-1 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
-                  >
-                    {showVitalsForm ? 'Fermer' : 'Saisir constantes'}
-                  </button>
-                </div>
 
-                {/* Vitals Input Form */}
-                {showVitalsForm && (
-                  <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl space-y-2 mb-3 animate-fadeIn">
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Poids (kg)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="75"
-                          value={vitalWeight}
-                          onChange={(e) => setVitalWeight(e.target.value)}
-                          className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none"
-                        />
+                  {/* Vitals Input Form */}
+                  {showVitalsForm && (
+                    <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl space-y-2 mb-3 animate-fadeIn">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Poids (kg)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="75"
+                            value={vitalWeight}
+                            onChange={(e) => setVitalWeight(e.target.value)}
+                            className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Tension (PA)</label>
+                          <input
+                            type="text"
+                            placeholder="120/80"
+                            value={vitalBp}
+                            onChange={(e) => setVitalBp(e.target.value)}
+                            className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none"
+                            title="Format: PAS/PAD (ex: 120/80)"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Pouls (bpm)</label>
+                          <input
+                            type="number"
+                            placeholder="72"
+                            value={vitalHr}
+                            onChange={(e) => setVitalHr(e.target.value)}
+                            className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Tension (PA)</label>
-                        <input
-                          type="text"
-                          placeholder="120/80"
-                          value={vitalBp}
-                          onChange={(e) => setVitalBp(e.target.value)}
-                          className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none"
-                          title="Format: PAS/PAD (ex: 120/80)"
-                        />
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Date de mesure</label>
+                          <input
+                            type="date"
+                            value={vitalDate}
+                            onChange={(e) => setVitalDate(e.target.value)}
+                            className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none text-[11px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Notes cliniques</label>
+                          <input
+                            type="text"
+                            placeholder="À jeun, reposé..."
+                            value={vitalNotes}
+                            onChange={(e) => setVitalNotes(e.target.value)}
+                            className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Pouls (bpm)</label>
-                        <input
-                          type="number"
-                          placeholder="72"
-                          value={vitalHr}
-                          onChange={(e) => setVitalHr(e.target.value)}
-                          className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none"
-                        />
+
+                      {vitalError && (
+                        <div className="text-[10px] text-rose-600 font-semibold bg-rose-50/50 p-1.5 rounded-lg border border-rose-100 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>{vitalError}</span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end gap-1.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowVitalsForm(false);
+                            setVitalError(null);
+                          }}
+                          className="px-2.5 py-1 text-[10px] text-slate-500 hover:bg-slate-100 font-bold rounded-lg cursor-pointer transition-colors"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveVital}
+                          className="px-3 py-1 text-[10px] bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg cursor-pointer transition-colors"
+                        >
+                          Enregistrer
+                        </button>
                       </div>
                     </div>
+                  )}
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Date de mesure</label>
-                        <input
-                          type="date"
-                          value={vitalDate}
-                          onChange={(e) => setVitalDate(e.target.value)}
-                          className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none text-[11px]"
-                        />
+                  {/* Vitals Trend Visualizer (Lightweight Custom SVG Sparklines) */}
+                  {selectedPatient.vitals_history && selectedPatient.vitals_history.length > 0 ? (
+                    <div className="space-y-2">
+                      {/* Graph Tabs */}
+                      <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/50 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => setVitalActiveTab('weight')}
+                          className={`flex-1 py-1 text-center font-bold rounded transition-colors cursor-pointer ${
+                            vitalActiveTab === 'weight' ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          Poids ({selectedPatient.vitals_history.filter(v => v.weight !== undefined).length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVitalActiveTab('bp')}
+                          className={`flex-1 py-1 text-center font-bold rounded transition-colors cursor-pointer ${
+                            vitalActiveTab === 'bp' ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          Tension ({selectedPatient.vitals_history.filter(v => v.blood_pressure !== undefined).length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVitalActiveTab('hr')}
+                          className={`flex-1 py-1 text-center font-bold rounded transition-colors cursor-pointer ${
+                            vitalActiveTab === 'hr' ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          Pouls ({selectedPatient.vitals_history.filter(v => v.heart_rate !== undefined).length})
+                        </button>
                       </div>
-                      <div>
-                        <label className="block text-[9px] text-slate-500 font-bold mb-0.5 uppercase">Notes cliniques</label>
-                        <input
-                          type="text"
-                          placeholder="À jeun, reposé..."
-                          value={vitalNotes}
-                          onChange={(e) => setVitalNotes(e.target.value)}
-                          className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-rose-400 focus:outline-none"
-                        />
-                      </div>
-                    </div>
 
-                    {vitalError && (
-                      <div className="text-[10px] text-rose-600 font-semibold bg-rose-50/50 p-1.5 rounded-lg border border-rose-100 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5" />
-                        <span>{vitalError}</span>
-                      </div>
-                    )}
+                      {/* SVG Sparkline Graph */}
+                      {(() => {
+                        const activeHistory = selectedPatient.vitals_history || [];
+                        let points: { date: string; val: number; label: string }[] = [];
+                        let unit = '';
+                        let strokeColor = '#f43f5e'; // rose-500
+                        let fillColor = '#ffe4e6'; // rose-100
 
-                    <div className="flex justify-end gap-1.5 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowVitalsForm(false);
-                          setVitalError(null);
-                        }}
-                        className="px-2.5 py-1 text-[10px] text-slate-500 hover:bg-slate-100 font-bold rounded-lg cursor-pointer transition-colors"
-                      >
-                        Annuler
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSaveVital}
-                        className="px-3 py-1 text-[10px] bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg cursor-pointer transition-colors"
-                      >
-                        Enregistrer
-                      </button>
-                    </div>
-                  </div>
-                )}
+                        if (vitalActiveTab === 'weight') {
+                          points = activeHistory
+                            .filter(v => v.weight !== undefined)
+                            .map(v => ({ date: v.date, val: v.weight as number, label: `${v.weight} kg` }))
+                            .reverse();
+                          unit = 'kg';
+                          strokeColor = '#ec4899'; // pink-500
+                          fillColor = '#fce7f3';
+                        } else if (vitalActiveTab === 'bp') {
+                          points = activeHistory
+                            .filter(v => v.blood_pressure !== undefined && v.blood_pressure.includes('/'))
+                            .map(v => {
+                              const sys = parseInt(v.blood_pressure?.split('/')[0] || '0');
+                              return { date: v.date, val: sys, label: `${v.blood_pressure} PA` };
+                            })
+                            .reverse();
+                          unit = 'PAS';
+                          strokeColor = '#ef4444'; // red-500
+                          fillColor = '#fee2e2';
+                        } else if (vitalActiveTab === 'hr') {
+                          points = activeHistory
+                            .filter(v => v.heart_rate !== undefined)
+                            .map(v => ({ date: v.date, val: v.heart_rate as number, label: `${v.heart_rate} bpm` }))
+                            .reverse();
+                          unit = 'bpm';
+                          strokeColor = '#06b6d4'; // cyan-500
+                          fillColor = '#ecfeff';
+                        }
 
-                {/* Vitals Trend Visualizer (Lightweight Custom SVG Sparklines) */}
-                {selectedPatient.vitals_history && selectedPatient.vitals_history.length > 0 ? (
-                  <div className="space-y-2">
-                    {/* Graph Tabs */}
-                    <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/50 text-[10px]">
-                      <button
-                        type="button"
-                        onClick={() => setVitalActiveTab('weight')}
-                        className={`flex-1 py-1 text-center font-bold rounded transition-colors cursor-pointer ${
-                          vitalActiveTab === 'weight' ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        Poids ({selectedPatient.vitals_history.filter(v => v.weight !== undefined).length})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setVitalActiveTab('bp')}
-                        className={`flex-1 py-1 text-center font-bold rounded transition-colors cursor-pointer ${
-                          vitalActiveTab === 'bp' ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        Tension ({selectedPatient.vitals_history.filter(v => v.blood_pressure !== undefined).length})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setVitalActiveTab('hr')}
-                        className={`flex-1 py-1 text-center font-bold rounded transition-colors cursor-pointer ${
-                          vitalActiveTab === 'hr' ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        Pouls ({selectedPatient.vitals_history.filter(v => v.heart_rate !== undefined).length})
-                      </button>
-                    </div>
+                        if (points.length < 2) {
+                          return (
+                            <div className="p-4 border border-dashed border-slate-100 rounded-xl text-center text-[10px] text-slate-400 italic">
+                              Insérez au moins 2 mesures de {vitalActiveTab === 'weight' ? 'poids' : vitalActiveTab === 'bp' ? 'tension' : 'pouls'} pour afficher le graphique d'évolution.
+                            </div>
+                          );
+                        }
 
-                    {/* SVG Sparkline Graph */}
-                    {(() => {
-                      const activeHistory = selectedPatient.vitals_history || [];
-                      let points: { date: string; val: number; label: string }[] = [];
-                      let unit = '';
-                      let strokeColor = '#f43f5e'; // rose-500
-                      let fillColor = '#ffe4e6'; // rose-100
+                        // Render mini-graph
+                        const width = 280;
+                        const height = 70;
+                        const padding = 8;
 
-                      if (vitalActiveTab === 'weight') {
-                        points = activeHistory
-                          .filter(v => v.weight !== undefined)
-                          .map(v => ({ date: v.date, val: v.weight as number, label: `${v.weight} kg` }))
-                          .reverse();
-                        unit = 'kg';
-                        strokeColor = '#ec4899'; // pink-500
-                        fillColor = '#fce7f3';
-                      } else if (vitalActiveTab === 'bp') {
-                        points = activeHistory
-                          .filter(v => v.blood_pressure !== undefined && v.blood_pressure.includes('/'))
-                          .map(v => {
-                            const sys = parseInt(v.blood_pressure?.split('/')[0] || '0');
-                            return { date: v.date, val: sys, label: `${v.blood_pressure} PA` };
-                          })
-                          .reverse();
-                        unit = 'PAS';
-                        strokeColor = '#ef4444'; // red-500
-                        fillColor = '#fee2e2';
-                      } else if (vitalActiveTab === 'hr') {
-                        points = activeHistory
-                          .filter(v => v.heart_rate !== undefined)
-                          .map(v => ({ date: v.date, val: v.heart_rate as number, label: `${v.heart_rate} bpm` }))
-                          .reverse();
-                        unit = 'bpm';
-                        strokeColor = '#06b6d4'; // cyan-500
-                        fillColor = '#ecfeff';
-                      }
+                        const vals = points.map(p => p.val);
+                        const minVal = Math.min(...vals) * 0.95;
+                        const maxVal = Math.max(...vals) * 1.05 === minVal ? minVal + 10 : Math.max(...vals) * 1.05;
 
-                      if (points.length < 2) {
+                        const svgPoints = points.map((p, index) => {
+                          const x = padding + (index / (points.length - 1)) * (width - padding * 2);
+                          const y = height - padding - ((p.val - minVal) / (maxVal - minVal)) * (height - padding * 2);
+                          return { x, y, date: p.date, label: p.label };
+                        });
+
+                        const pathD = svgPoints.reduce((acc, p, index) => {
+                          return index === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
+                        }, '');
+
+                        const areaD = `${pathD} L ${svgPoints[svgPoints.length - 1].x} ${height - padding} L ${svgPoints[0].x} ${height - padding} Z`;
+
                         return (
-                          <div className="p-4 border border-dashed border-slate-100 rounded-xl text-center text-[10px] text-slate-400 italic">
-                            Insérez au moins 2 mesures de {vitalActiveTab === 'weight' ? 'poids' : vitalActiveTab === 'bp' ? 'tension' : 'pouls'} pour afficher le graphique d'évolution.
+                          <div className="bg-slate-50 border border-slate-100 rounded-xl p-2 relative">
+                            <div className="text-[9px] font-bold text-slate-400 flex justify-between px-1 mb-1">
+                              <span>Évolution ({points[0].date} à {points[points.length-1].date})</span>
+                              <span className="text-slate-500 font-mono">Max: {Math.max(...vals).toFixed(0)} {unit}</span>
+                            </div>
+                            <svg className="w-full h-[70px] overflow-visible" viewBox={`0 0 ${width} ${height}`}>
+                              {/* Area Fill */}
+                              <path d={areaD} fill={fillColor} opacity="0.3" />
+                              {/* Trend Line */}
+                              <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              {/* Grid floor line */}
+                              <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="2,2" />
+                              {/* Markers */}
+                              {svgPoints.map((pt, i) => (
+                                <g key={i} className="group cursor-pointer">
+                                  <circle cx={pt.x} cy={pt.y} r="3" fill="white" stroke={strokeColor} strokeWidth="1.5" />
+                                  <circle cx={pt.x} cy={pt.y} r="5" fill={strokeColor} opacity="0" className="hover:opacity-20 transition-opacity" />
+                                  {/* Dynamic Hover Tooltip inside SVG */}
+                                  <title>{`${pt.date} : ${pt.label}`}</title>
+                                </g>
+                              ))}
+                            </svg>
                           </div>
                         );
-                      }
+                      })()}
 
-                      // Render mini-graph
-                      const width = 280;
-                      const height = 70;
-                      const padding = 8;
-
-                      const vals = points.map(p => p.val);
-                      const minVal = Math.min(...vals) * 0.95;
-                      const maxVal = Math.max(...vals) * 1.05 === minVal ? minVal + 10 : Math.max(...vals) * 1.05;
-
-                      const svgPoints = points.map((p, index) => {
-                        const x = padding + (index / (points.length - 1)) * (width - padding * 2);
-                        const y = height - padding - ((p.val - minVal) / (maxVal - minVal)) * (height - padding * 2);
-                        return { x, y, date: p.date, label: p.label };
-                      });
-
-                      const pathD = svgPoints.reduce((acc, p, index) => {
-                        return index === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`;
-                      }, '');
-
-                      const areaD = `${pathD} L ${svgPoints[svgPoints.length - 1].x} ${height - padding} L ${svgPoints[0].x} ${height - padding} Z`;
-
-                      return (
-                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-2 relative">
-                          <div className="text-[9px] font-bold text-slate-400 flex justify-between px-1 mb-1">
-                            <span>Évolution ({points[0].date} à {points[points.length-1].date})</span>
-                            <span className="text-slate-500 font-mono">Max: {Math.max(...vals).toFixed(0)} {unit}</span>
-                          </div>
-                          <svg className="w-full h-[70px] overflow-visible" viewBox={`0 0 ${width} ${height}`}>
-                            {/* Area Fill */}
-                            <path d={areaD} fill={fillColor} opacity="0.3" />
-                            {/* Trend Line */}
-                            <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            {/* Grid floor line */}
-                            <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="2,2" />
-                            {/* Markers */}
-                            {svgPoints.map((pt, i) => (
-                              <g key={i} className="group cursor-pointer">
-                                <circle cx={pt.x} cy={pt.y} r="3" fill="white" stroke={strokeColor} strokeWidth="1.5" />
-                                <circle cx={pt.x} cy={pt.y} r="5" fill={strokeColor} opacity="0" className="hover:opacity-20 transition-opacity" />
-                                {/* Dynamic Hover Tooltip inside SVG */}
-                                <title>{`${pt.date} : ${pt.label}`}</title>
-                              </g>
-                            ))}
-                          </svg>
+                      {/* Vitals List Table */}
+                      <div className="bg-white border border-slate-100 rounded-xl divide-y divide-slate-100 text-[11px] overflow-hidden">
+                        <div className="bg-slate-50/50 p-1.5 font-bold text-slate-500 text-[9px] uppercase tracking-wider flex justify-between">
+                          <span>Historique des mesures</span>
+                          <span>{selectedPatient.vitals_history.length} entrées</span>
                         </div>
-                      );
-                    })()}
-
-                    {/* Vitals List Table */}
-                    <div className="bg-white border border-slate-100 rounded-xl divide-y divide-slate-100 text-[11px] overflow-hidden">
-                      <div className="bg-slate-50/50 p-1.5 font-bold text-slate-500 text-[9px] uppercase tracking-wider flex justify-between">
-                        <span>Historique des mesures</span>
-                        <span>{selectedPatient.vitals_history.length} entrées</span>
-                      </div>
-                      <div className="max-h-[120px] overflow-y-auto divide-y divide-slate-50">
-                        {selectedPatient.vitals_history.slice(0, 5).map((vital) => (
-                          <div key={vital.id} className="p-1.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                            <div className="space-y-0.5">
-                              <div className="flex items-center gap-1.5 font-bold text-slate-700">
-                                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                <span>{new Date(vital.date).toLocaleDateString('fr-FR')}</span>
-                                {vital.notes && (
-                                  <span className="text-[10px] font-normal text-slate-400 italic">({vital.notes})</span>
-                                )}
+                        <div className="max-h-[120px] overflow-y-auto divide-y divide-slate-50">
+                          {selectedPatient.vitals_history.slice(0, 5).map((vital) => (
+                            <div key={vital.id} className="p-1.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-1.5 font-bold text-slate-700">
+                                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>{new Date(vital.date).toLocaleDateString('fr-FR')}</span>
+                                  {vital.notes && (
+                                    <span className="text-[10px] font-normal text-slate-400 italic">({vital.notes})</span>
+                                  )}
+                                </div>
+                                <div className="flex gap-3 text-slate-500 text-[10px] font-mono">
+                                  {vital.weight && (
+                                    <span className="flex items-center gap-0.5">
+                                      <Scale className="w-3 h-3 text-pink-500" /> {vital.weight} kg
+                                    </span>
+                                  )}
+                                  {vital.blood_pressure && (
+                                    <span className="flex items-center gap-0.5">
+                                      <Activity className="w-3 h-3 text-red-500" /> PA {vital.blood_pressure}
+                                    </span>
+                                  )}
+                                  {vital.heart_rate && (
+                                    <span className="flex items-center gap-0.5">
+                                      <Heart className="w-3 h-3 text-cyan-500" /> {vital.heart_rate} bpm
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              <div className="flex gap-3 text-slate-500 text-[10px] font-mono">
-                                {vital.weight && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Scale className="w-3 h-3 text-pink-500" /> {vital.weight} kg
-                                  </span>
-                                )}
-                                {vital.blood_pressure && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Activity className="w-3 h-3 text-red-500" /> PA {vital.blood_pressure}
-                                  </span>
-                                )}
-                                {vital.heart_rate && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Heart className="w-3 h-3 text-cyan-500" /> {vital.heart_rate} bpm
-                                  </span>
-                                )}
-                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteVital(vital.id)}
+                                className="p-1 text-slate-300 hover:text-rose-600 rounded hover:bg-rose-50 transition-colors cursor-pointer"
+                                title="Supprimer la mesure"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteVital(vital.id)}
-                              className="p-1 text-slate-300 hover:text-rose-600 rounded hover:bg-rose-50 transition-colors cursor-pointer"
-                              title="Supprimer la mesure"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="p-3 border border-dashed border-slate-200 rounded-xl text-center text-[11px] text-slate-400 italic">
-                    Aucune constante n'a encore été enregistrée pour ce patient. Cliquez sur "Saisir constantes" pour commencer le suivi.
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="p-3 border border-dashed border-slate-200 rounded-xl text-center text-[11px] text-slate-400 italic">
+                      Aucune constante n'a encore été enregistrée pour ce patient. Cliquez sur "Saisir constantes" pour commencer le suivi.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="p-8 text-center border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center space-y-2">
