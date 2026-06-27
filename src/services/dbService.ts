@@ -340,3 +340,86 @@ export async function deletePrescriptionItemFromFirestore(itemId: string): Promi
     throw error;
   }
 }
+
+/**
+ * Delete a user's entire account, including their profile, config, and clinic data (patients, draft prescriptions).
+ * Finally, attempts to delete their Firebase Authentication record.
+ */
+export async function deleteUserAccount(uid: string, role: 'doctor' | 'secretary'): Promise<void> {
+  // 1. If user is a doctor, delete their clinic data
+  if (role === 'doctor') {
+    // Delete doctor config
+    try {
+      await deleteDoc(doc(db, 'doctorConfigs', uid));
+    } catch (err) {
+      console.warn("Could not delete doctor config:", err);
+    }
+
+    // Delete patients
+    try {
+      const patientsQuery = query(collection(db, 'patients'), where('doctorUid', '==', uid));
+      const patientsSnap = await getDocs(patientsQuery);
+      const deletePromises: Promise<void>[] = [];
+      patientsSnap.forEach((patientDoc) => {
+        deletePromises.push(deleteDoc(doc(db, 'patients', patientDoc.id)));
+      });
+      await Promise.all(deletePromises);
+    } catch (err) {
+      console.warn("Could not delete patients:", err);
+    }
+
+    // Delete prescriptions (only non-signed ones can be deleted due to rules)
+    try {
+      const prescriptionsQuery = query(collection(db, 'prescriptions'), where('doctorUid', '==', uid));
+      const prescriptionsSnap = await getDocs(prescriptionsQuery);
+      const deletePromises: Promise<void>[] = [];
+      prescriptionsSnap.forEach((prescriptionDoc) => {
+        const data = prescriptionDoc.data();
+        if (data.status !== 'signed') {
+          deletePromises.push(deleteDoc(doc(db, 'prescriptions', prescriptionDoc.id)));
+        }
+      });
+      await Promise.all(deletePromises);
+    } catch (err) {
+      console.warn("Could not delete prescriptions:", err);
+    }
+
+    // Delete prescription items
+    try {
+      const itemsQuery = query(collection(db, 'prescriptionItems'), where('doctorUid', '==', uid));
+      const itemsSnap = await getDocs(itemsQuery);
+      const deletePromises: Promise<void>[] = [];
+      itemsSnap.forEach((itemDoc) => {
+        deletePromises.push(deleteDoc(doc(db, 'prescriptionItems', itemDoc.id)));
+      });
+      await Promise.all(deletePromises);
+    } catch (err) {
+      console.warn("Could not delete prescription items:", err);
+    }
+  }
+
+  // 2. Delete the primary User Profile in Firestore
+  const path = `users/${uid}`;
+  try {
+    await deleteDoc(doc(db, 'users', uid));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+    throw error;
+  }
+
+  // 3. Delete the user from Firebase Authentication
+  const currentUser = auth.currentUser;
+  if (currentUser && currentUser.uid === uid) {
+    try {
+      await currentUser.delete();
+    } catch (error: any) {
+      console.error("Firebase Auth user deletion failed:", error);
+      // Re-throw if it requires recent login so we can handle it in the UI
+      if (error && (error.code === 'auth/requires-recent-login' || error.message?.includes('requires-recent-login'))) {
+        throw new Error('REQUIRES_RECENT_LOGIN');
+      }
+      throw error;
+    }
+  }
+}
+

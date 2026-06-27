@@ -37,6 +37,7 @@ import {
   savePrescriptionItemToFirestore, 
   deletePrescriptionItemFromFirestore, 
   saveDoctorConfig as saveDoctorConfigToFirestore, 
+  deleteUserAccount,
   UserProfile 
 } from './services/dbService';
 
@@ -64,7 +65,10 @@ import {
   LogOut,
   Lock,
   Loader2,
-  Users
+  Users,
+  Trash2,
+  AlertTriangle,
+  ShieldAlert
 } from 'lucide-react';
 
 export default function App() {
@@ -89,6 +93,13 @@ export default function App() {
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<'prescription' | 'database' | 'doctor' | 'tests'>('prescription');
+
+  // Account Deletion States
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteConfirmCheckbox, setDeleteConfirmCheckbox] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // 1. Auth state change listener
   useEffect(() => {
@@ -212,6 +223,29 @@ export default function App() {
        await signOut(auth);
     } catch (err) {
        console.error('Failed to log out:', err);
+    }
+  };
+
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    if (!userProfile) return;
+    setIsDeletingAccount(true);
+    setDeleteError(null);
+    try {
+      await deleteUserAccount(userProfile.uid, userProfile.role);
+      setIsDeleteAccountOpen(false);
+      setDeleteConfirmText('');
+      setDeleteConfirmCheckbox(false);
+      // Auth's onAuthStateChanged will handle setting user and userProfile to null
+    } catch (err: any) {
+      console.error('Failed to delete account:', err);
+      if (err.message === 'REQUIRES_RECENT_LOGIN') {
+        setDeleteError('REQUIRES_RECENT_LOGIN');
+      } else {
+        setDeleteError(err.message || 'Une erreur est survenue lors de la suppression du compte.');
+      }
+    } finally {
+      setIsDeletingAccount(false);
     }
   };
 
@@ -535,6 +569,13 @@ export default function App() {
                 </button>
               </div>
               <button
+                onClick={() => setIsDeleteAccountOpen(true)}
+                className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
+                title="Supprimer mon compte • حذف الحساب"
+              >
+                <Trash2 className="w-4.5 h-4.5" />
+              </button>
+              <button
                 onClick={handleLogout}
                 className="p-2.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
                 title="Se déconnecter"
@@ -772,6 +813,140 @@ export default function App() {
         )}
 
       </main>
+
+      {/* ACCOUNT DELETION MODAL WITH ACCIDENTAL PROTECTION */}
+      {isDeleteAccountOpen && (
+        <div className="fixed inset-0 bg-slate-900/65 flex items-center justify-center p-4 z-50 animate-fade-in backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full border border-slate-100 shadow-2xl overflow-hidden flex flex-col animate-scale-in">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-100 bg-rose-50/50 flex items-center gap-3">
+              <div className="p-2 bg-rose-100 text-rose-600 rounded-xl">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Suppression du compte</h3>
+                <p className="text-xs text-rose-600 font-semibold">Action irréversible • إجراء غير قابل للتراجع</p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Vous êtes sur le point de supprimer définitivement votre compte <strong>{user?.email}</strong>. 
+                Cette opération effacera l'ensemble de votre accès et données sur OrdoMed TN.
+              </p>
+
+              {userProfile?.role === 'doctor' && (
+                <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span className="text-xs font-bold text-amber-800">Données perdues (Médecin) :</span>
+                  </div>
+                  <ul className="text-[11px] text-amber-700 list-disc list-inside space-y-1 pl-1">
+                    <li>Votre configuration de cabinet médical</li>
+                    <li>Vos fiches patients enregistrées</li>
+                    <li>Vos ordonnances médicales non signées</li>
+                    <li>Les accès de vos secrétaires associés</li>
+                  </ul>
+                </div>
+              )}
+
+              {userProfile?.role === 'secretary' && (
+                <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span className="text-xs font-bold text-amber-800">Données perdues (Secrétariat) :</span>
+                  </div>
+                  <ul className="text-[11px] text-amber-700 list-disc list-inside space-y-1 pl-1">
+                    <li>Votre profil d'accès de secrétariat</li>
+                    <li>Votre liaison avec le cabinet du médecin</li>
+                  </ul>
+                </div>
+              )}
+
+              {/* Safety triggers to prevent accidental deletion */}
+              <div className="space-y-4 pt-2 border-t border-slate-100">
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={deleteConfirmCheckbox}
+                    onChange={(e) => setDeleteConfirmCheckbox(e.target.checked)}
+                    className="mt-0.5 rounded border-slate-300 text-rose-600 focus:ring-rose-500 w-4.5 h-4.5 cursor-pointer shrink-0"
+                  />
+                  <span className="text-xs text-slate-600 font-medium leading-normal">
+                    Je comprends que cette action est définitive et que mes données ne pourront jamais être récupérées.
+                  </span>
+                </label>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Saisissez "SUPPRIMER" pour valider la suppression :
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder='Écrivez "SUPPRIMER" ici'
+                    className="w-full px-3.5 py-2 rounded-xl text-sm border border-slate-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-slate-50 font-semibold text-slate-800"
+                  />
+                </div>
+              </div>
+
+              {deleteError && (
+                <div className="p-3 bg-rose-100 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold leading-relaxed">
+                  {deleteError === 'REQUIRES_RECENT_LOGIN' ? (
+                    <div>
+                      <p className="font-bold mb-1">Sécurité renforcée requise</p>
+                      Pour supprimer votre compte, vous devez vous être connecté récemment. Veuillez vous déconnecter, vous reconnecter à l'application, puis réessayer la suppression.
+                    </div>
+                  ) : (
+                    deleteError
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDeleteAccountOpen(false);
+                  setDeleteConfirmText('');
+                  setDeleteConfirmCheckbox(false);
+                  setDeleteError(null);
+                }}
+                disabled={isDeletingAccount}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={!deleteConfirmCheckbox || deleteConfirmText !== 'SUPPRIMER' || isDeletingAccount}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all cursor-pointer shadow-sm ${
+                  deleteConfirmCheckbox && deleteConfirmText === 'SUPPRIMER' && !isDeletingAccount
+                    ? 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800'
+                    : 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+                }`}
+              >
+                {isDeletingAccount ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Suppression...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Supprimer définitivement
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
