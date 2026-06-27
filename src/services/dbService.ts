@@ -55,9 +55,8 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
       };
       try {
         await withTimeout(setDoc(userDocRef, profile), 8000, "La configuration du profil a expiré.");
-        await withTimeout(deleteDoc(emailDocRef), 8000, "La configuration de l'invitation a expiré.");
       } catch (e) {
-        console.warn("Could not delete secondary invitation for dmossaab@gmail.com:", e);
+        console.warn("Could not set profile for dmossaab@gmail.com:", e);
       }
       
       // Ensure default doctor configuration exists

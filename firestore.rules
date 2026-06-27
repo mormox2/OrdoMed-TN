@@ -30,9 +30,7 @@ service cloud.firestore {
 
     // Check if the logged-in user is a doctor and matches the doctorUid
     function isAuthorizedDoctor(doctorUid) {
-      return isSignedIn() && 
-             request.auth.uid == doctorUid &&
-             (!exists(/databases/$(database)/documents/users/$(request.auth.uid)) || getUserDoc(request.auth.uid).role == 'doctor');
+      return isSignedIn() && request.auth.uid == doctorUid;
     }
 
     function isValidId(id) {

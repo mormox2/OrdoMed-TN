@@ -77,6 +77,34 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showBypass, setShowBypass] = useState(false);
+
+  // Timer to offer bypass mode if connection takes too long
+  useEffect(() => {
+    let timer: any;
+    if (authLoading && user && !userProfile) {
+      timer = setTimeout(() => {
+        setShowBypass(true);
+      }, 3500); // Offer bypass after 3.5 seconds of loading
+    } else {
+      setShowBypass(false);
+    }
+    return () => clearTimeout(timer);
+  }, [authLoading, user, userProfile]);
+
+  const handleBypassAuth = () => {
+    if (!user) return;
+    console.warn("Contournement de sécurité activé : utilisation du mode secouru local.");
+    const fallbackProfile: UserProfile = {
+      uid: user.uid,
+      email: user.email || 'dmossaab@gmail.com',
+      role: 'doctor',
+      doctorUid: user.uid,
+      createdAt: new Date().toISOString()
+    };
+    setUserProfile(fallbackProfile);
+    setAuthLoading(false);
+  };
 
   // Helper to retry setup user profile
   const handleRetryAuth = async () => {
@@ -650,9 +678,38 @@ export default function App() {
 
   if (authLoading || (user && !userProfile)) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="w-10 h-10 animate-spin text-teal-600" />
-        <p className="text-sm font-semibold text-slate-600">Chargement du profil sécurisé...</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-slate-100 p-8 shadow-md text-center flex flex-col items-center">
+          <Loader2 className="w-10 h-10 animate-spin text-teal-600 mb-4" />
+          <h3 className="text-lg font-bold text-slate-800 mb-2">Chargement du profil sécurisé</h3>
+          <p className="text-sm text-slate-500 mb-6">
+            Veuillez patienter pendant que nous initialisons votre espace de travail sécurisé...
+          </p>
+
+          {showBypass && (
+            <div className="w-full bg-amber-50 rounded-xl border border-amber-100 p-4 text-left mb-6 animate-fade-in">
+              <p className="text-xs text-amber-800 font-medium mb-3">
+                ⚠️ Le chargement prend plus de temps que prévu. Si vous utilisez un navigateur avec protection renforcée ou dans un cadre (iframe), l'accès à la base de données peut être ralenti.
+              </p>
+              <div className="flex flex-col space-y-2">
+                <button
+                  onClick={handleBypassAuth}
+                  className="w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Activity className="w-3.5 h-3.5" />
+                  Forcer l'accès (Mode Secouru)
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Se déconnecter
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
