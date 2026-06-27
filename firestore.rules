@@ -55,7 +55,8 @@ service cloud.firestore {
              data.order_number is string && data.order_number.size() <= 128 &&
              data.address_fr is string && data.address_fr.size() <= 512 &&
              data.address_ar is string && data.address_ar.size() <= 512 &&
-             data.phone is string && data.phone.size() <= 64;
+             data.phone is string && data.phone.size() <= 64 &&
+             (!('website' in data) || (data.website is string && data.website.size() <= 256));
     }
 
     function isValidPatient(data) {
