@@ -27,7 +27,7 @@ export interface UserProfile {
 /**
  * Utility to wrap a promise with a timeout to prevent infinite hanging.
  */
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 8000, errorMessage: string = "La connexion à la base de données sécurisée a expiré. Veuillez rafraîchir la page."): Promise<T> {
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 30000, errorMessage: string = "La connexion à la base de données sécurisée a expiré. Veuillez rafraîchir la page."): Promise<T> {
   return Promise.race([
     promise,
     new Promise<never>((_, reject) => setTimeout(() => reject(new Error(errorMessage)), timeoutMs))
@@ -54,14 +54,14 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
         createdAt: new Date().toISOString()
       };
       try {
-        await withTimeout(setDoc(userDocRef, profile), 8000, "La configuration du profil a expiré.");
+        await withTimeout(setDoc(userDocRef, profile), 30000, "La configuration du profil a expiré.");
       } catch (e) {
         console.warn("Could not set profile for dmossaab@gmail.com:", e);
       }
       
       // Ensure default doctor configuration exists
       const configDocRef = doc(db, 'doctorConfigs', uid);
-      const configSnap = await withTimeout(getDoc(configDocRef), 8000, "Le chargement de la configuration du médecin a expiré.");
+      const configSnap = await withTimeout(getDoc(configDocRef), 30000, "Le chargement de la configuration du médecin a expiré.");
       if (!configSnap.exists()) {
         const defaultDoctorConfig: DoctorConfig = {
           name_fr: 'Cabinet Médical',
@@ -75,13 +75,13 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
           show_automatic_stamp: true,
           website: ''
         };
-        await withTimeout(setDoc(configDocRef, defaultDoctorConfig), 8000, "L'initialisation de la configuration du médecin a expiré.");
+        await withTimeout(setDoc(configDocRef, defaultDoctorConfig), 30000, "L'initialisation de la configuration du médecin a expiré.");
       }
       return profile;
     }
 
     // 1. Check if UID doc exists
-    const userSnap = await withTimeout(getDoc(userDocRef), 8000, "Le chargement du profil utilisateur a expiré.");
+    const userSnap = await withTimeout(getDoc(userDocRef), 30000, "Le chargement du profil utilisateur a expiré.");
     if (userSnap.exists()) {
       return userSnap.data() as UserProfile;
     }
@@ -106,7 +106,7 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
 
     if (!isSigningUpAsDoctor && normalizedEmail && normalizedEmail.includes('@') && normalizedEmail !== uid) {
       try {
-        emailSnap = await withTimeout(getDoc(emailDocRef), 5000, "La vérification d'invitation secrétariat a expiré.");
+        emailSnap = await withTimeout(getDoc(emailDocRef), 20000, "La vérification d'invitation secrétariat a expiré.");
         if (emailSnap && emailSnap.exists()) {
           isSecretaryInvitation = true;
         }
@@ -126,9 +126,9 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
       };
 
       // Create actual user document
-      await withTimeout(setDoc(userDocRef, profile), 8000, "La création du profil secrétariat a expiré.");
+      await withTimeout(setDoc(userDocRef, profile), 30000, "La création du profil secrétariat a expiré.");
       // Delete the temporary email invitation doc
-      await withTimeout(deleteDoc(emailDocRef), 8000, "La suppression de l'invitation a expiré.");
+      await withTimeout(deleteDoc(emailDocRef), 30000, "La suppression de l'invitation a expiré.");
 
       return profile;
     }
@@ -142,11 +142,11 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
       createdAt: new Date().toISOString()
     };
 
-    await withTimeout(setDoc(userDocRef, newProfile), 8000, "La création du profil médecin a expiré.");
+    await withTimeout(setDoc(userDocRef, newProfile), 30000, "La création du profil médecin a expiré.");
 
     // Also initialize default doctor config if it doesn't exist
     const configDocRef = doc(db, 'doctorConfigs', uid);
-    const configSnap = await withTimeout(getDoc(configDocRef), 8000, "La vérification de configuration a expiré.");
+    const configSnap = await withTimeout(getDoc(configDocRef), 30000, "La vérification de configuration a expiré.");
     if (!configSnap.exists()) {
       const defaultDoctorConfig: DoctorConfig = {
         name_fr: 'Cabinet Médical',
@@ -160,7 +160,7 @@ export async function setupUserAndGetProfile(uid: string, email: string): Promis
         show_automatic_stamp: true,
         website: ''
       };
-      await withTimeout(setDoc(configDocRef, defaultDoctorConfig), 8000, "La création de configuration médecin a expiré.");
+      await withTimeout(setDoc(configDocRef, defaultDoctorConfig), 30000, "La création de configuration médecin a expiré.");
     }
 
     return newProfile;
