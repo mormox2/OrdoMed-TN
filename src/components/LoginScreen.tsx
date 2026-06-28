@@ -270,48 +270,133 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
         </div>
       </div>
 
+      {/* Subtle Dot Matrix Grid Overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-25 pointer-events-none" />
+
       {/* Decorative background gradients for high-end look */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-sky-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 pointer-events-none" />
 
       {/* LEFT COLUMN: Visual clinical panels and rich content (lg:col-span-7) */}
-      <div className={`hidden lg:flex lg:col-span-7 flex-col justify-between p-12 bg-slate-950/40 ${isRtl ? 'border-l' : 'border-r'} border-slate-800/60 relative z-10`}>
+      <div className={`hidden lg:flex lg:col-span-7 flex-col justify-between p-12 bg-slate-950/20 ${isRtl ? 'border-l' : 'border-r'} border-slate-800/40 relative z-10 overflow-y-auto max-h-screen`}>
         
         {/* Top brand header */}
         <div className="flex items-center gap-3.5">
           <Logo size="md" />
           <div>
-            <span className="text-[10px] text-teal-400 font-extrabold tracking-widest uppercase block leading-none">{t.republic}</span>
-            <h1 className="text-xl font-black text-slate-100 tracking-tight">
+            <span className="text-[9px] text-teal-400 font-extrabold tracking-widest uppercase block leading-none">{t.republic}</span>
+            <h1 className="text-2xl font-black text-slate-100 tracking-tight mt-0.5">
               {t.brandTitle}
             </h1>
           </div>
         </div>
 
         {/* Feature grid & value props */}
-        <div className="my-auto max-w-xl space-y-10">
+        <div className="my-auto max-w-xl space-y-8 py-6">
           <div className="space-y-4">
-            <span className="px-3.5 py-1 bg-teal-500/10 text-teal-400 font-bold rounded-full text-xs uppercase tracking-wider border border-teal-500/20 inline-block">
+            <span className="px-3.5 py-1 bg-gradient-to-r from-teal-500/10 to-sky-500/10 text-teal-400 font-extrabold rounded-full text-[10px] uppercase tracking-wider border border-teal-500/20 inline-block">
               {t.tagline}
             </span>
-            <h2 className="text-4xl font-extrabold text-slate-100 tracking-tight leading-snug">
-              {t.mainTitle}
+            <h2 className="text-4xl font-extrabold text-white tracking-tight leading-snug">
+              {lang === 'fr' ? (
+                <>
+                  Simplifiez vos <span className="bg-gradient-to-r from-teal-400 to-sky-400 bg-clip-text text-transparent">consultations</span>.<br />Sécurisez vos patients.
+                </>
+              ) : (
+                <>
+                  سهّل <span className="bg-gradient-to-r from-teal-400 to-sky-400 bg-clip-text text-transparent">عيادتك</span>.<br />واحمِ مرضاك.
+                </>
+              )}
             </h2>
             <p className="text-slate-400 text-sm leading-relaxed">
               {t.mainDesc}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Interactive Bilingual Prescription Mockup */}
+          <div className="relative group">
+            {/* Ambient neon border glow */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-teal-500 to-sky-500 rounded-2xl blur opacity-15 group-hover:opacity-25 transition duration-1000" />
+            
+            <div className="relative bg-white text-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-100 transform group-hover:scale-[1.005] transition-all duration-300">
+              {/* Header block */}
+              <div className="flex justify-between items-start border-b border-sky-100 pb-3 mb-3 text-[11px] text-slate-500">
+                <div>
+                  <p className="font-extrabold text-slate-900 text-xs">Dr. Nour Ben Amor</p>
+                  <p className="text-teal-600 font-bold text-[10px]">Cardiologue • طبيب أمراض القلب</p>
+                  <p className="text-[10px] mt-0.5">Tél : +216 71 234 567</p>
+                </div>
+                <div className="text-right font-mono text-[9px] text-slate-400">
+                  <p className="font-bold text-slate-700">Tunis, Tunisie</p>
+                  <p>N° Ordre: 19842</p>
+                </div>
+              </div>
+
+              {/* Patient details & date */}
+              <div className="flex justify-between text-xs font-semibold mb-3 text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <p>Patient : <span className="text-slate-900">Yassine Ben Ali (48 ans)</span></p>
+                <p>Date : <span className="text-slate-900">28/06/2026</span></p>
+              </div>
+
+              {/* Rx prescription items */}
+              <div className="space-y-4 my-3">
+                <div className="text-base font-black text-sky-700 font-serif tracking-wider">Rp/</div>
+                
+                {/* Prescription Item 1 */}
+                <div className="pl-3 border-l-2 border-teal-500 space-y-1">
+                  <div className="flex justify-between text-[11.5px] font-bold text-slate-900">
+                    <span>1. CLOPIDOGREL 75mg</span>
+                    <span className="text-[10px] text-slate-400 font-mono">1 Boîte • علبة</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-normal">
+                    <span className="font-semibold text-teal-600">Posologie :</span> 1 comprimé par jour au dîner pendant 3 mois.
+                  </p>
+                  <p className="text-[11px] text-slate-500 text-right leading-normal font-sans" dir="rtl">
+                    <span className="font-bold text-teal-600">الجرعة:</span> قرص واحد يومياً خلال العشاء لمدة 3 أشهر.
+                  </p>
+                </div>
+
+                {/* Prescription Item 2 */}
+                <div className="pl-3 border-l-2 border-sky-500 space-y-1">
+                  <div className="flex justify-between text-[11.5px] font-bold text-slate-900">
+                    <span>2. ATORVASTATINE 20mg</span>
+                    <span className="text-[10px] text-slate-400 font-mono">2 Boîtes • علبتان</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-normal">
+                    <span className="font-semibold text-sky-600">Posologie :</span> 1 comprimé par jour le soir au coucher.
+                  </p>
+                  <p className="text-[11px] text-slate-500 text-right leading-normal font-sans" dir="rtl">
+                    <span className="font-bold text-sky-600">الجرعة:</span> قرص واحد يومياً في الليل قبل النوم.
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer watermark & Stamp */}
+              <div className="flex justify-between items-end mt-4 pt-3 border-t border-slate-100 text-[10px]">
+                <div className="text-[9px] text-slate-400 leading-tight">
+                  <p>Ordonnance sécurisée bilingue</p>
+                  <p className="font-mono mt-0.5">ID: OM-2026-9842</p>
+                </div>
+                <div className="relative shrink-0 flex flex-col items-center justify-center py-1 px-3 border-2 border-emerald-500/40 rounded-xl bg-emerald-50/40 transform rotate-2">
+                  <span className="text-[7px] font-bold uppercase tracking-wider text-emerald-600 leading-none">Cabinet Médical</span>
+                  <span className="text-[9.5px] font-extrabold text-emerald-700 leading-tight">Dr. Nour Ben Amor</span>
+                  <span className="text-[6.5px] text-emerald-500 font-bold font-mono">TUNISIE • تونس</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
             
             {/* Feature 1 */}
             <div className="flex gap-3">
-              <div className="p-2.5 bg-slate-900 border border-slate-800 text-teal-400 rounded-xl shrink-0 h-11 w-11 flex items-center justify-center">
-                <Globe className="w-5 h-5" />
+              <div className="p-2.5 bg-slate-900/80 border border-slate-800 text-teal-400 rounded-xl shrink-0 h-10 w-10 flex items-center justify-center">
+                <Globe className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-slate-200">{t.feat1Title}</h4>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                <h4 className="text-xs font-bold text-slate-200">{t.feat1Title}</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
                   {t.feat1Desc}
                 </p>
               </div>
@@ -319,12 +404,12 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
 
             {/* Feature 2 */}
             <div className="flex gap-3">
-              <div className="p-2.5 bg-slate-900 border border-slate-800 text-teal-400 rounded-xl shrink-0 h-11 w-11 flex items-center justify-center">
-                <Database className="w-5 h-5" />
+              <div className="p-2.5 bg-slate-900/80 border border-slate-800 text-teal-400 rounded-xl shrink-0 h-10 w-10 flex items-center justify-center">
+                <Database className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-slate-200">{t.feat2Title}</h4>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                <h4 className="text-xs font-bold text-slate-200">{t.feat2Title}</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
                   {t.feat2Desc}
                 </p>
               </div>
@@ -332,12 +417,12 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
 
             {/* Feature 3 */}
             <div className="flex gap-3">
-              <div className="p-2.5 bg-slate-900 border border-slate-800 text-teal-400 rounded-xl shrink-0 h-11 w-11 flex items-center justify-center">
-                <LockKeyhole className="w-5 h-5" />
+              <div className="p-2.5 bg-slate-900/80 border border-slate-800 text-teal-400 rounded-xl shrink-0 h-10 w-10 flex items-center justify-center">
+                <LockKeyhole className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-slate-200">{t.feat3Title}</h4>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                <h4 className="text-xs font-bold text-slate-200">{t.feat3Title}</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
                   {t.feat3Desc}
                 </p>
               </div>
@@ -345,12 +430,12 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
 
             {/* Feature 4 */}
             <div className="flex gap-3">
-              <div className="p-2.5 bg-slate-900 border border-slate-800 text-teal-400 rounded-xl shrink-0 h-11 w-11 flex items-center justify-center">
-                <Users className="w-5 h-5" />
+              <div className="p-2.5 bg-slate-900/80 border border-slate-800 text-teal-400 rounded-xl shrink-0 h-10 w-10 flex items-center justify-center">
+                <Users className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-slate-200">{t.feat4Title}</h4>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                <h4 className="text-xs font-bold text-slate-200">{t.feat4Title}</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
                   {t.feat4Desc}
                 </p>
               </div>
@@ -359,27 +444,27 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
           </div>
 
           {/* Quick trust metrics */}
-          <div className="pt-6 border-t border-slate-800/80 flex items-center justify-between gap-4">
-            <div className="text-slate-400 text-xs leading-relaxed">
+          <div className="pt-5 border-t border-slate-800/80 flex items-center justify-between gap-4">
+            <div className="text-slate-400 text-[11px] leading-relaxed">
               {t.footerTrust}
             </div>
             <div className="flex -space-x-2 shrink-0">
-              <div className="w-8 h-8 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 text-[10px] font-bold">100%</div>
-              <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-[10px] font-bold">TLS</div>
-              <div className="w-8 h-8 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400 text-[10px] font-bold">GDPR</div>
+              <div className="w-8 h-8 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 text-[10px] font-bold">100%</div>
+              <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-[10px] font-bold">TLS</div>
+              <div className="w-8 h-8 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 text-[10px] font-bold">GDPR</div>
             </div>
           </div>
         </div>
 
         {/* Footer info */}
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-slate-500 pt-4">
           {t.footerCopyright}
         </div>
 
       </div>
 
       {/* RIGHT COLUMN: The login/signup Card itself (lg:col-span-5) */}
-      <div className="flex-1 lg:col-span-5 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10 bg-slate-900 lg:bg-transparent">
+      <div className="flex-1 lg:col-span-5 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10 bg-slate-900 lg:bg-transparent overflow-y-auto max-h-screen">
         
         {/* On Mobile/Tablet: Show brand header inside the form area */}
         <div className="lg:hidden text-center mb-8">
@@ -389,7 +474,7 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
           <h2 className="text-3xl font-extrabold text-white tracking-tight">
             {t.brandTitle}
           </h2>
-          <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+          <p className="mt-2 text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
             {t.mainTitle}
           </p>
         </div>
