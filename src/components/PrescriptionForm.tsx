@@ -344,11 +344,12 @@ export default function PrescriptionForm({
 
   const handleSave = () => {
     if (!patient) return;
+    const presId = activePrescription?.id || 'pres-' + Math.random().toString(36).substr(2, 9);
     const presNumber = activePrescription?.prescription_number || `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const ageStr = patient ? `${getPatientAge(patient.birth_date)} ans` : '';
 
     const prescription: Prescription = {
-      id: activePrescription?.id || 'pres-' + Math.random().toString(36).substr(2, 9),
+      id: presId,
       patient_id: patient.id,
       doctor_id: 'doc-current',
       prescription_number: presNumber,
@@ -366,7 +367,12 @@ export default function PrescriptionForm({
       is_cnam_apci: isCnamApci,
     };
 
-    onSaveDraft(prescription, items);
+    const updatedItems = items.map(item => ({
+      ...item,
+      prescription_id: presId
+    }));
+
+    onSaveDraft(prescription, updatedItems);
   };
 
   const handleSign = () => {
@@ -392,7 +398,7 @@ export default function PrescriptionForm({
 
     if (hasSuspended) {
       const confirmForce = confirm(
-        "ATTENTION : Cette ordonnance contient un médicament suspendu ou radié par le ministère (AMM révoquée). Souhaitez-vous outrepasser l'alerte sous votre entière responsabilité médicale ?"
+         "ATTENTION : Cette ordonnance contient un médicament suspendu ou radié par le ministère (AMM révoquée). Souhaitez-vous outrepasser l'alerte sous votre entière responsabilité médicale ?"
       );
       if (!confirmForce) return;
     }
@@ -469,11 +475,12 @@ export default function PrescriptionForm({
       return;
     }
 
+    const presId = activePrescription?.id || 'pres-' + Math.random().toString(36).substr(2, 9);
     const presNumber = activePrescription?.prescription_number || `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const ageStr = `${getPatientAge(patient.birth_date)} ans`;
 
     const prescription: Prescription = {
-      id: activePrescription?.id || 'pres-' + Math.random().toString(36).substr(2, 9),
+      id: presId,
       patient_id: patient.id,
       doctor_id: 'doc-current',
       prescription_number: presNumber,
@@ -492,18 +499,24 @@ export default function PrescriptionForm({
       is_cnam_apci: isCnamApci,
     };
 
-    onSignAndLock(prescription, items);
+    const updatedItems = items.map(item => ({
+      ...item,
+      prescription_id: presId
+    }));
+
+    onSignAndLock(prescription, updatedItems);
   };
 
   const handleOpenPrint = () => {
     if (!patient) return;
     if (items.length === 0) return;
 
+    const presId = activePrescription?.id || 'pres-draft-' + Math.random().toString(36).substr(2, 9);
     const presNumber = activePrescription?.prescription_number || `ORD-2026-DRAFT`;
     const ageStr = `${getPatientAge(patient.birth_date)} ans`;
 
     const prescription: Prescription = {
-      id: activePrescription?.id || 'pres-draft',
+      id: presId,
       patient_id: patient.id,
       doctor_id: 'doc-current',
       prescription_number: presNumber,
@@ -521,7 +534,12 @@ export default function PrescriptionForm({
       is_cnam_apci: isCnamApci,
     };
 
-    onOpenPrintPreview(prescription, items);
+    const updatedItems = items.map(item => ({
+      ...item,
+      prescription_id: presId
+    }));
+
+    onOpenPrintPreview(prescription, updatedItems);
   };
 
   // Combine drafting items with patient's current medications for UI alerts

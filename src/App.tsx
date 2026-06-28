@@ -246,6 +246,12 @@ export default function App() {
   // 3. Load active prescription if patient has a draft
   useEffect(() => {
     if (selectedPatient && userProfile?.role === 'doctor') {
+      // If we already have an active prescription/draft for this patient in the editor,
+      // do NOT overwrite or wipe it out when other database elements change
+      if (activePrescription && activePrescription.patient_id === selectedPatient.id) {
+        return;
+      }
+
       const patientDraft = db.prescriptions.find(
         (p) => p.patient_id === selectedPatient.id && p.status === 'draft'
       );
@@ -485,6 +491,8 @@ export default function App() {
 
   // Trigger print preview screen
   const handleOpenPrintPreview = (prescription: Prescription, items: PrescriptionItem[]) => {
+    setActivePrescription(prescription);
+    setActiveItems(items);
     setPrintPreviewPrescription(prescription);
     setPrintPreviewItems(items);
     logAudit('OPEN_PRINT_PREVIEW', 'PRESCRIPTION', prescription.id, null, null);

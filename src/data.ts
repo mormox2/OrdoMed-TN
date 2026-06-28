@@ -630,17 +630,37 @@ export function getDbState(): DbState {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      // Ensure all tables exist in parsed object
-      return {
-        medicines: parsed.medicines || INITIAL_MEDICINES,
+      
+      // Merge medicines to ensure they have access to the full official Tunisian PCT database
+      let medicines = parsed.medicines || INITIAL_MEDICINES;
+      if (medicines.length < INITIAL_MEDICINES.length) {
+        const existingIds = new Set(medicines.map((m: Medicine) => m.id));
+        const missingMedicines = INITIAL_MEDICINES.filter((m) => !existingIds.has(m.id));
+        medicines = [...medicines, ...missingMedicines];
+      }
+
+      // Merge dosage templates
+      let dosageTemplates = parsed.dosageTemplates || INITIAL_DOSAGE_TEMPLATES;
+      if (dosageTemplates.length < INITIAL_DOSAGE_TEMPLATES.length) {
+        const existingIds = new Set(dosageTemplates.map((t: any) => t.id));
+        const missingTemplates = INITIAL_DOSAGE_TEMPLATES.filter((t) => !existingIds.has(t.id));
+        dosageTemplates = [...dosageTemplates, ...missingTemplates];
+      }
+
+      const mergedState: DbState = {
+        medicines,
         aliases: parsed.aliases || [],
-        dosageTemplates: parsed.dosageTemplates || INITIAL_DOSAGE_TEMPLATES,
+        dosageTemplates,
         patients: parsed.patients || INITIAL_PATIENTS,
         prescriptions: parsed.prescriptions || INITIAL_PRESCRIPTIONS,
         prescriptionItems: parsed.prescriptionItems || INITIAL_PRESCRIPTION_ITEMS,
         auditLogs: parsed.auditLogs || INITIAL_AUDIT_LOGS,
         doctorConfig: parsed.doctorConfig || DEFAULT_DOCTOR_CONFIG,
       };
+
+      // Persist the merged state back to localStorage
+      localStorage.setItem('tun_med_prescription_db', JSON.stringify(mergedState));
+      return mergedState;
     } catch (e) {
       console.error('Failed to parse DB, using defaults', e);
     }

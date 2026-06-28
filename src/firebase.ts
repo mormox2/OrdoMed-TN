@@ -16,6 +16,15 @@ const firebaseConfig = {
   firestoreDatabaseId: metaEnv.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId || "(default)"
 };
 
+// CRITICAL HARDCODED FALLBACK: If running on Vercel/production under this project,
+// we must enforce the correct Firestore database ID to avoid "Database 'default' not found" errors.
+if (
+  firebaseConfig.projectId === "winter-quota-8dzmz" &&
+  (!firebaseConfig.firestoreDatabaseId || firebaseConfig.firestoreDatabaseId === "(default)")
+) {
+  firebaseConfig.firestoreDatabaseId = "ai-studio-ordomedtn-93a17686-f027-44cd-9c80-8667280e1fdd";
+}
+
 const app = initializeApp(firebaseConfig);
 
 // CRITICAL: We use initializeFirestore with experimentalForceLongPolling to prevent infinite hangs
