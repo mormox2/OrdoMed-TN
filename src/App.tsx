@@ -68,7 +68,9 @@ import {
   Users,
   Trash2,
   AlertTriangle,
-  ShieldAlert
+  ShieldAlert,
+  Menu,
+  X
 } from 'lucide-react';
 
 export default function App() {
@@ -141,6 +143,7 @@ export default function App() {
 
   // Navigation tab
   const [activeTab, setActiveTab] = useState<'prescription' | 'database' | 'doctor' | 'tests'>('prescription');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Account Deletion States
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
@@ -537,7 +540,7 @@ export default function App() {
   // Render bilingue top menu bar
   const renderNavigationBar = () => {
     return (
-      <header className="bg-slate-900 text-white shadow-md print:hidden">
+      <header className="bg-slate-900 text-white shadow-md print:hidden relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
@@ -552,98 +555,193 @@ export default function App() {
               </div>
             </div>
 
-            {/* Menu Tabs */}
-            <nav className="flex space-x-1 sm:space-x-2">
+            {/* Menu Tabs - Desktop only */}
+            <nav className="hidden md:flex space-x-1 sm:space-x-2">
               {userProfile?.role === 'doctor' ? (
                 <>
                   <button
                     onClick={() => { setActiveTab('prescription'); setPrintPreviewPrescription(null); }}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'prescription' && !printPreviewPrescription
                         ? 'bg-sky-600 text-white shadow-sm'
                         : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
                     }`}
+                    title="Ordonnancer"
                   >
                     <FileText className="w-4 h-4" />
-                    Ordonnancer
+                    <span className="hidden md:inline">Ordonnancer</span>
                   </button>
                   <button
                     onClick={() => { setActiveTab('database'); setPrintPreviewPrescription(null); }}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'database'
                         ? 'bg-sky-600 text-white shadow-sm'
                         : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
                     }`}
+                    title="Médicaments / Admin"
                   >
                     <Database className="w-4 h-4" />
-                    Médicaments / Admin
+                    <span className="hidden md:inline">Médicaments / Admin</span>
                   </button>
                   <button
                     onClick={() => { setActiveTab('doctor'); setPrintPreviewPrescription(null); }}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'doctor'
                         ? 'bg-sky-600 text-white shadow-sm'
                         : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
                     }`}
+                    title="Cabinet settings"
                   >
                     <Settings className="w-4 h-4" />
-                    Cabinet settings
+                    <span className="hidden md:inline">Cabinet</span>
                   </button>
                   <button
                     onClick={() => { setActiveTab('tests'); setPrintPreviewPrescription(null); }}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'tests'
                         ? 'bg-sky-600 text-white shadow-sm'
                         : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
                     }`}
+                    title="Tests Qualité"
                   >
                     <Activity className="w-4 h-4" />
-                    Tests Qualité
+                    <span className="hidden md:inline">Tests</span>
                   </button>
                 </>
               ) : (
-                <span className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-900/30 text-teal-300 border border-teal-800/50">
+                <span className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-900/30 text-teal-300 border border-teal-800/50">
                   <Users className="w-4 h-4" />
-                  Espace Secrétariat
+                  <span className="hidden sm:inline">Espace Secrétariat</span>
+                  <span className="sm:hidden">Secrétariat</span>
                 </span>
               )}
             </nav>
 
-            {/* User Profile & Logout */}
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex flex-col items-end text-xs">
-                <span className="font-semibold text-slate-200 truncate max-w-[150px] text-slate-300">{user?.email}</span>
-                <button
-                  type="button"
-                  onClick={handleToggleRole}
-                  className={`mt-0.5 px-2 py-0.5 text-[9px] font-extrabold rounded-md uppercase tracking-wider transition-all border cursor-pointer ${
-                    userProfile?.role === 'doctor'
-                      ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/60 hover:bg-emerald-900/50 hover:text-emerald-200'
-                      : 'bg-amber-950/40 text-amber-300 border-amber-800/60 hover:bg-amber-900/50 hover:text-amber-200'
-                  }`}
-                  title="Changer de rôle (Médecin <-> Secrétaire) • تبديل الدور"
-                >
+            {/* User Profile & Logout - Desktop only */}
+            <div className="hidden md:flex items-center gap-2.5">
+              <div className="flex flex-col items-end text-xs">
+                <span className="hidden lg:inline font-semibold text-slate-300 truncate max-w-[120px]">{user?.email}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400">
                   {userProfile?.role === 'doctor' ? 'Médecin 🩺' : 'Secrétaire 📋'}
-                </button>
+                </span>
               </div>
               <button
                 onClick={() => setIsDeleteAccountOpen(true)}
-                className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
+                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
                 title="Supprimer mon compte • حذف الحساب"
               >
                 <Trash2 className="w-4.5 h-4.5" />
               </button>
               <button
                 onClick={handleLogout}
-                className="p-2.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
+                className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
                 title="Se déconnecter"
               >
                 <LogOut className="w-4.5 h-4.5" />
               </button>
             </div>
 
+            {/* Hamburger toggle - Mobile only */}
+            <div className="flex md:hidden">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none transition-all cursor-pointer"
+                aria-label="Toggle Menu"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
+
           </div>
         </div>
+
+        {/* Mobile menu, show/hide based on menu state */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-800 bg-slate-900 px-4 py-3 space-y-3 transition-all duration-300 shadow-xl">
+            {userProfile?.role === 'doctor' ? (
+              <div className="space-y-1">
+                <button
+                  onClick={() => { setActiveTab('prescription'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === 'prescription' && !printPreviewPrescription
+                      ? 'bg-sky-600 text-white shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <FileText className="w-5 h-5" />
+                  <span>Ordonnancer (Rédiger)</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab('database'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === 'database'
+                      ? 'bg-sky-600 text-white shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Database className="w-5 h-5" />
+                  <span>Médicaments / Admin</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab('doctor'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === 'doctor'
+                      ? 'bg-sky-600 text-white shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Settings className="w-5 h-5" />
+                  <span>Cabinet settings</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab('tests'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === 'tests'
+                      ? 'bg-sky-600 text-white shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Activity className="w-5 h-5" />
+                  <span>Tests Qualité</span>
+                </button>
+              </div>
+            ) : (
+              <div className="px-4 py-2 rounded-xl text-xs font-bold bg-teal-900/30 text-teal-300 border border-teal-800/50 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                <span>Espace Secrétariat</span>
+              </div>
+            )}
+
+            {/* User section in mobile menu */}
+            <div className="pt-3 border-t border-slate-800 flex flex-col gap-3">
+              <div className="px-4 py-1 text-xs text-slate-400 truncate">
+                Connecté : <span className="font-semibold text-slate-200">{user?.email}</span>
+              </div>
+              <div className="flex items-center justify-between px-4">
+                <span className="text-xs text-slate-400">Rôle actif :</span>
+                <span className="text-xs font-bold text-sky-400 uppercase tracking-wider">
+                  {userProfile?.role === 'doctor' ? 'Médecin 🩺' : 'Secrétaire 📋'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 px-2">
+                <button
+                  onClick={() => { setIsDeleteAccountOpen(true); setMobileMenuOpen(false); }}
+                  className="flex items-center justify-center gap-2 py-2.5 text-xs text-slate-400 hover:text-rose-500 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer border border-slate-800"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-500" />
+                  <span>Supprimer</span>
+                </button>
+                <button
+                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                  className="flex items-center justify-center gap-2 py-2.5 text-xs text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-slate-800"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400" />
+                  <span>Déconnexion</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
     );
   };
