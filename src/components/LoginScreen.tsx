@@ -109,6 +109,48 @@ const translations = {
   }
 };
 
+const MOCKUP_DATA = {
+  cardio: {
+    doctorName: "Dr. Nour Ben Amor",
+    doctorSpecialty: "Cardiologue • طبيب أمراض القلب",
+    patientName: "Yassine Ben Ali (48 ans)",
+    med1Name: "1. CLOPIDOGREL 75mg",
+    med1Qty: "1 Boîte • علبة",
+    med1PosFr: "1 comprimé par jour au dîner pendant 3 mois.",
+    med1PosAr: "قرص واحد يومياً خلال العشاء لمدة 3 أشهر.",
+    med2Name: "2. ATORVASTATINE 20mg",
+    med2Qty: "2 Boîtes • علبتان",
+    med2PosFr: "1 comprimé par jour le soir au coucher.",
+    med2PosAr: "قرص واحد يومياً في الليل قبل النوم.",
+  },
+  pediatrie: {
+    doctorName: "Dr. Selim Gharbi",
+    doctorSpecialty: "Pédiatre • طبيب الأطفال",
+    patientName: "Sarra Trabelsi (6 ans)",
+    med1Name: "1. AUGMENTIN Enfant 400mg/57mg",
+    med1Qty: "2 Flacons • قارورتان",
+    med1PosFr: "2 cuillères-mesure matin et soir pendant 7 jours.",
+    med1PosAr: "ملعقتان قياسيتان صباحاً ومساءً لمدة 7 أيام.",
+    med2Name: "2. PARACÉTAMOL Sirop 3%",
+    med2Qty: "1 Flacon • قارورة",
+    med2PosFr: "1 dose-poids toutes les 6 heures en cas de fièvre.",
+    med2PosAr: "جرعة-وزن واحدة كل 6 ساعات في حالة الحمى.",
+  },
+  generale: {
+    doctorName: "Dr. Amine Bouziri",
+    doctorSpecialty: "Médecin Généraliste • طب عام",
+    patientName: "Mohamed Mansour (62 ans)",
+    med1Name: "1. METFORMINE 850mg",
+    med1Qty: "3 Boîtes • ثلاث علب",
+    med1PosFr: "1 comprimé au milieu de chacun des 3 repas principaux.",
+    med1PosAr: "قرص واحد في وسط كل وجبة من الوجبات الثلاث الرئيسية.",
+    med2Name: "2. ASPIRINE CARDIO 100mg",
+    med2Qty: "1 Boîte • علبة",
+    med2PosFr: "1 comprimé par jour à midi au milieu du déjeuner.",
+    med2PosAr: "قرص واحد يومياً في الغداء.",
+  }
+};
+
 export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScreenProps) {
   const [mode, setMode] = useState<AuthMode>('signin');
   const [lang, setLang] = useState<Language>('fr');
@@ -118,6 +160,8 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [activeMockupTab, setActiveMockupTab] = useState<'cardio' | 'pediatrie' | 'generale'>('cardio');
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   const resetFields = () => {
     setEmail('');
@@ -314,79 +358,152 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
             </p>
           </div>
 
+          {/* Interactive Bilingual Prescription Mockup - CATEGORY SELECTOR */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-teal-400 uppercase tracking-wider">
+                {lang === 'fr' ? "Simulateur Interactif" : "المحاكي التفاعلي"}
+              </span>
+              <span className="text-[10px] text-slate-500 font-medium">
+                {lang === 'fr' ? "Cliquez pour tester" : "اضغط للتجربة"}
+              </span>
+            </div>
+            
+            <div className="flex gap-2 p-1 bg-slate-950/80 rounded-xl border border-slate-800/60 w-full sm:max-w-md">
+              <button
+                type="button"
+                onClick={() => setActiveMockupTab('cardio')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  activeMockupTab === 'cardio'
+                    ? 'bg-teal-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                }`}
+              >
+                🫀 Cardiologie
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveMockupTab('pediatrie')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  activeMockupTab === 'pediatrie'
+                    ? 'bg-teal-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                }`}
+              >
+                👶 Pédiatrie
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveMockupTab('generale')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  activeMockupTab === 'generale'
+                    ? 'bg-teal-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                }`}
+              >
+                🩺 Général
+              </button>
+            </div>
+          </div>
+
           {/* Interactive Bilingual Prescription Mockup */}
           <div className="relative group">
             {/* Ambient neon border glow */}
             <div className="absolute -inset-0.5 bg-gradient-to-r from-teal-500 to-sky-500 rounded-2xl blur opacity-15 group-hover:opacity-25 transition duration-1000" />
             
-            <div className="relative bg-white text-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-100 transform group-hover:scale-[1.005] transition-all duration-300">
-              {/* Header block */}
-              <div className="flex justify-between items-start border-b border-sky-100 pb-3 mb-3 text-[11px] text-slate-500">
-                <div>
-                  <p className="font-extrabold text-slate-900 text-xs">Dr. Nour Ben Amor</p>
-                  <p className="text-teal-600 font-bold text-[10px]">Cardiologue • طبيب أمراض القلب</p>
-                  <p className="text-[10px] mt-0.5">Tél : +216 71 234 567</p>
-                </div>
-                <div className="text-right font-mono text-[9px] text-slate-400">
-                  <p className="font-bold text-slate-700">Tunis, Tunisie</p>
-                  <p>N° Ordre: 19842</p>
-                </div>
-              </div>
-
-              {/* Patient details & date */}
-              <div className="flex justify-between text-xs font-semibold mb-3 text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <p>Patient : <span className="text-slate-900">Yassine Ben Ali (48 ans)</span></p>
-                <p>Date : <span className="text-slate-900">28/06/2026</span></p>
-              </div>
-
-              {/* Rx prescription items */}
-              <div className="space-y-4 my-3">
-                <div className="text-base font-black text-sky-700 font-serif tracking-wider">Rp/</div>
-                
-                {/* Prescription Item 1 */}
-                <div className="pl-3 border-l-2 border-teal-500 space-y-1">
-                  <div className="flex justify-between text-[11.5px] font-bold text-slate-900">
-                    <span>1. CLOPIDOGREL 75mg</span>
-                    <span className="text-[10px] text-slate-400 font-mono">1 Boîte • علبة</span>
+            {(() => {
+              const currentMock = MOCKUP_DATA[activeMockupTab];
+              return (
+                <div className="relative bg-white text-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-100 transform group-hover:scale-[1.002] transition-all duration-300">
+                  {/* Header block */}
+                  <div className="flex justify-between items-start border-b border-sky-100 pb-3 mb-3 text-[11px] text-slate-500">
+                    <div>
+                      <p className="font-extrabold text-slate-900 text-xs">{currentMock.doctorName}</p>
+                      <p className="text-teal-600 font-bold text-[10px]">{currentMock.doctorSpecialty}</p>
+                      <p className="text-[10px] mt-0.5">Tél : +216 71 234 567</p>
+                    </div>
+                    <div className="text-right font-mono text-[9px] text-slate-400">
+                      <p className="font-bold text-slate-700">Tunis, Tunisie</p>
+                      <p>N° Ordre: 19842</p>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-normal">
-                    <span className="font-semibold text-teal-600">Posologie :</span> 1 comprimé par jour au dîner pendant 3 mois.
-                  </p>
-                  <p className="text-[11px] text-slate-500 text-right leading-normal font-sans" dir="rtl">
-                    <span className="font-bold text-teal-600">الجرعة:</span> قرص واحد يومياً خلال العشاء لمدة 3 أشهر.
-                  </p>
-                </div>
 
-                {/* Prescription Item 2 */}
-                <div className="pl-3 border-l-2 border-sky-500 space-y-1">
-                  <div className="flex justify-between text-[11.5px] font-bold text-slate-900">
-                    <span>2. ATORVASTATINE 20mg</span>
-                    <span className="text-[10px] text-slate-400 font-mono">2 Boîtes • علبتان</span>
+                  {/* Patient details & date */}
+                  <div className="flex justify-between text-xs font-semibold mb-3 text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    <p>Patient : <span className="text-slate-900">{currentMock.patientName}</span></p>
+                    <p>Date : <span className="text-slate-900">28/06/2026</span></p>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-normal">
-                    <span className="font-semibold text-sky-600">Posologie :</span> 1 comprimé par jour le soir au coucher.
-                  </p>
-                  <p className="text-[11px] text-slate-500 text-right leading-normal font-sans" dir="rtl">
-                    <span className="font-bold text-sky-600">الجرعة:</span> قرص واحد يومياً في الليل قبل النوم.
-                  </p>
-                </div>
-              </div>
 
-              {/* Footer watermark & Stamp */}
-              <div className="flex justify-between items-end mt-4 pt-3 border-t border-slate-100 text-[10px]">
-                <div className="text-[9px] text-slate-400 leading-tight">
-                  <p>Ordonnance sécurisée bilingue</p>
-                  <p className="font-mono mt-0.5">ID: OM-2026-9842</p>
+                  {/* Rx prescription items */}
+                  <div className="space-y-4 my-3">
+                    <div className="text-base font-black text-sky-700 font-serif tracking-wider">Rp/</div>
+                    
+                    {/* Prescription Item 1 */}
+                    <div className="pl-3 border-l-2 border-teal-500 space-y-1">
+                      <div className="flex justify-between text-[11.5px] font-bold text-slate-900">
+                        <span>{currentMock.med1Name}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{currentMock.med1Qty}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-normal">
+                        <span className="font-semibold text-teal-600">Posologie :</span> {currentMock.med1PosFr}
+                      </p>
+                      <p className="text-[11px] text-slate-500 text-right leading-normal font-sans" dir="rtl">
+                        <span className="font-bold text-teal-600">الجرعة:</span> {currentMock.med1PosAr}
+                      </p>
+                    </div>
+
+                    {/* Prescription Item 2 */}
+                    <div className="pl-3 border-l-2 border-sky-500 space-y-1">
+                      <div className="flex justify-between text-[11.5px] font-bold text-slate-900">
+                        <span>{currentMock.med2Name}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{currentMock.med2Qty}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-normal">
+                        <span className="font-semibold text-sky-600">Posologie :</span> {currentMock.med2PosFr}
+                      </p>
+                      <p className="text-[11px] text-slate-500 text-right leading-normal font-sans" dir="rtl">
+                        <span className="font-bold text-sky-600">الجرعة:</span> {currentMock.med2PosAr}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Footer watermark & Stamp */}
+                  <div className="flex justify-between items-end mt-4 pt-3 border-t border-slate-100 text-[10px]">
+                    <div className="text-[9px] text-slate-400 leading-tight">
+                      <p>Ordonnance sécurisée bilingue</p>
+                      <p className="font-mono mt-0.5">ID: OM-2026-9842</p>
+                    </div>
+                    <div className="relative shrink-0 flex flex-col items-center justify-center py-1 px-3 border-2 border-emerald-500/40 rounded-xl bg-emerald-50/40 transform rotate-2">
+                      <span className="text-[7px] font-bold uppercase tracking-wider text-emerald-600 leading-none">Cabinet Médical</span>
+                      <span className="text-[9.5px] font-extrabold text-emerald-700 leading-tight">{currentMock.doctorName}</span>
+                      <span className="text-[6.5px] text-emerald-500 font-bold font-mono">TUNISIE • تونس</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="relative shrink-0 flex flex-col items-center justify-center py-1 px-3 border-2 border-emerald-500/40 rounded-xl bg-emerald-50/40 transform rotate-2">
-                  <span className="text-[7px] font-bold uppercase tracking-wider text-emerald-600 leading-none">Cabinet Médical</span>
-                  <span className="text-[9.5px] font-extrabold text-emerald-700 leading-tight">Dr. Nour Ben Amor</span>
-                  <span className="text-[6.5px] text-emerald-500 font-bold font-mono">TUNISIE • تونس</span>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
 
+          {/* Testimonial Quote */}
+          {(() => {
+            const testimonial = lang === 'fr' 
+              ? { quote: "OrdoMed a divisé par deux le temps de mes consultations. La génération bilingue rassure énormément les familles tunisiennes.", author: "Pr. K. Ben Rejeb", role: "Cardiologue, Clinique de l'Ariana" }
+              : { quote: "أوردوميد قلص وقت فحص المريض إلى النصف. الترجمة التلقائية للدارجة التونسية تقدم طمأنينة كبيرة للأهالي والمسنين.", author: "أ. د. خليل بن رجب", role: "طبيب قلب، مصحة أريانة" };
+            return (
+              <div className="bg-slate-950/30 border border-slate-800/50 p-4.5 rounded-2xl relative overflow-hidden">
+                <p className="text-slate-300 text-xs italic leading-relaxed relative z-10">
+                  "{testimonial.quote}"
+                </p>
+                <div className="mt-3 flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-teal-400">{testimonial.author}</span>
+                  <span className="text-slate-500">{testimonial.role}</span>
+                </div>
+                <div className="absolute -bottom-4 right-2 text-7xl font-serif text-teal-500/5 select-none font-black">”</div>
+              </div>
+            );
+          })()}
+
+          {/* Core Feature Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
             
             {/* Feature 1 */}
@@ -441,6 +558,57 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
               </div>
             </div>
 
+          </div>
+
+          {/* FAQ Accordion Section */}
+          <div className="pt-6 border-t border-slate-800/60 space-y-3">
+            <h3 className="text-sm font-extrabold text-white tracking-tight uppercase">
+              {lang === 'fr' ? "Questions Fréquentes" : "الأسئلة الشائعة"}
+            </h3>
+            
+            <div className="space-y-2">
+              {[
+                {
+                  q: lang === 'fr' ? "Comment fonctionne l'importation de la base PCT ?" : "كيف يعمل استيراد قاعدة الأدوية التونسية؟",
+                  a: lang === 'fr' 
+                    ? "Vous pouvez importer instantanément le catalogue officiel tunisien des médicaments (plus de 5000 spécialités) via notre importateur intelligent ou ajouter vos médicaments personnalisés."
+                    : "يمكنك استيراد الكتالوج الرسمي للأدوية في تونس (أكثر من 5000 دواء) فوراً بضغطة واحدة، أو إضافة أدويتك الخاصة يدوياً."
+                },
+                {
+                  q: lang === 'fr' ? "Puis-je l'utiliser hors-ligne ?" : "هل يمكنني استخدامه دون إنترنت؟",
+                  a: lang === 'fr'
+                    ? "Oui ! L'application met en cache vos données localement pour que vous puissiez continuer à consulter et rédiger des ordonnances même en cas de coupure réseau."
+                    : "نعم! يقوم التطبيق بحفظ بياناتك محلياً بشكل آمن حتى تتمكن من مواصلة فحص المرضى وكتابة الوصفات الطبية حتى عند انقطاع الشبكة."
+                },
+                {
+                  q: lang === 'fr' ? "Comment fonctionne l'Espace Secrétariat ?" : "كيف تعمل مساحة الأمانة الطبية؟",
+                  a: lang === 'fr'
+                    ? "Depuis vos paramètres, invitez votre secrétaire avec son e-mail. Elle aura son propre accès restreint pour enregistrer les fiches d'accueil des patients et gérer la liste d'attente, sans jamais accéder à vos antécédents cliniques ou ordonnances."
+                    : "من إعداداتك، يمكنك دعوة السكرتير(ة) عبر بريده الإلكتروني. سيكون له حساب خاص ومحدود الصلاحيات لتسجيل المرضى وإدارة قائمة الانتظار، دون الاطلاع على التاريخ الطبي أو تفاصيل الوصفات."
+                }
+              ].map((faq, i) => (
+                <div 
+                  key={i} 
+                  className="bg-slate-900/40 hover:bg-slate-900/60 border border-slate-800/80 rounded-xl overflow-hidden transition-all duration-300"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveFaq(activeFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between p-4 text-left font-semibold text-xs text-slate-200 focus:outline-none cursor-pointer"
+                  >
+                    <span className={lang === 'ar' ? 'text-right w-full font-bold' : 'font-bold'}>{faq.q}</span>
+                    <span className="text-teal-400 shrink-0 font-bold ml-2">
+                      {activeFaq === i ? '−' : '+'}
+                    </span>
+                  </button>
+                  {activeFaq === i && (
+                    <div className="px-4 pb-4 text-[11px] text-slate-400 leading-relaxed border-t border-slate-800/40 pt-2 animate-fadeIn">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Quick trust metrics */}
