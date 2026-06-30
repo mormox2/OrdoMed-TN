@@ -6,7 +6,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   getDbState, 
-  logAudit 
+  logAudit,
+  setAuditContext,
+  DEFAULT_DOCTOR_CONFIG
 } from './data';
 import { 
   Patient, 
@@ -24,18 +26,13 @@ import {
   query, 
   where, 
   onSnapshot, 
-  doc, 
-  getDocs,
-  setDoc
+  doc
 } from 'firebase/firestore';
 import { 
   setupUserAndGetProfile, 
   savePatientToFirestore, 
   deletePatientFromFirestore, 
-  savePrescriptionToFirestore, 
-  deletePrescriptionFromFirestore, 
-  savePrescriptionItemToFirestore, 
-  deletePrescriptionItemFromFirestore, 
+  savePrescriptionBundleToFirestore,
   saveDoctorConfig as saveDoctorConfigToFirestore, 
   deleteUserAccount,
   UserProfile 
@@ -79,34 +76,6 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [showBypass, setShowBypass] = useState(false);
-
-  // Timer to offer bypass mode if connection takes too long
-  useEffect(() => {
-    let timer: any;
-    if (authLoading && user && !userProfile) {
-      timer = setTimeout(() => {
-        setShowBypass(true);
-      }, 3500); // Offer bypass after 3.5 seconds of loading
-    } else {
-      setShowBypass(false);
-    }
-    return () => clearTimeout(timer);
-  }, [authLoading, user, userProfile]);
-
-  const handleBypassAuth = () => {
-    if (!user) return;
-    console.warn("Contournement de sécurité activé : utilisation du mode secouru local.");
-    const fallbackProfile: UserProfile = {
-      uid: user.uid,
-      email: user.email || 'dmossaab@gmail.com',
-      role: 'doctor',
-      doctorUid: user.uid,
-      createdAt: new Date().toISOString()
-    };
-    setUserProfile(fallbackProfile);
-    setAuthLoading(false);
-  };
 
   // Helper to retry setup user profile
   const handleRetryAuth = async () => {
@@ -115,6 +84,7 @@ export default function App() {
     setAuthError(null);
     try {
       const profile = await setupUserAndGetProfile(user.uid, user.email || '');
+      setAuditContext(profile.doctorUid);
       setUserProfile(profile);
       if (profile.role === 'secretary') {
         setActiveTab('prescription');
@@ -129,6 +99,41 @@ export default function App() {
 
   // Global Database State
   const [db, setDb] = useState(getDbState());
+
+  const clearSensitiveClientState = () => {
+    setAuditContext(null);
+    setDb((previous) => ({
+      ...previous,
+      patients: [],
+      prescriptions: [],
+      prescriptionItems: [],
+      auditLogs: [],
+      doctorConfig: DEFAULT_DOCTOR_CONFIG
+    }));
+
+    try {
+      const stored = localStorage.getItem('tun_med_prescription_db');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        localStorage.setItem('tun_med_prescription_db', JSON.stringify({
+          ...parsed,
+          medicines: [],
+          dosageTemplates: [],
+          patients: [],
+          prescriptions: [],
+          prescriptionItems: [],
+          auditLogs: [],
+          doctorConfig: DEFAULT_DOCTOR_CONFIG
+        }));
+      }
+      for (let index = localStorage.length - 1; index >= 0; index--) {
+        const key = localStorage.key(index);
+        if (key?.startsWith('user_profile_')) localStorage.removeItem(key);
+      }
+    } catch (error) {
+      console.warn('Unable to scrub local sensitive state:', error);
+    }
+  };
   
   // Selected Contexts
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -157,10 +162,13 @@ export default function App() {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       setAuthLoading(true);
       setAuthError(null);
+      setUserProfile(null);
+      clearSensitiveClientState();
       if (currentUser) {
         setUser(currentUser);
         try {
           const profile = await setupUserAndGetProfile(currentUser.uid, currentUser.email || '');
+          setAuditContext(profile.doctorUid);
           setUserProfile(profile);
           // Default secretary to prescription tab (which is adjusted to only show Patients)
           if (profile.role === 'secretary') {
@@ -172,7 +180,6 @@ export default function App() {
         }
       } else {
         setUser(null);
-        setUserProfile(null);
         setSelectedPatient(null);
         setActivePrescription(null);
         setActiveItems([]);
@@ -279,6 +286,10 @@ export default function App() {
   // Handle logout
   const handleLogout = async () => {
     try {
+       clearSensitiveClientState();
+       setSelectedPatient(null);
+       setActivePrescription(null);
+       setActiveItems([]);
        await signOut(auth);
     } catch (err) {
        console.error('Failed to log out:', err);
@@ -305,33 +316,6 @@ export default function App() {
       }
     } finally {
       setIsDeletingAccount(false);
-    }
-  };
-
-  // Toggle role in database for convenient developer and clinic testing
-  const handleToggleRole = async () => {
-    if (!userProfile) return;
-    const newRole = userProfile.role === 'doctor' ? 'secretary' : 'doctor';
-    
-    // When becoming doctor, doctorUid becomes user's own uid.
-    // When becoming secretary, we keep their own uid or existing doctorUid to maintain test integrity.
-    const updatedProfile: UserProfile = {
-      ...userProfile,
-      role: newRole,
-      doctorUid: newRole === 'doctor' ? userProfile.uid : userProfile.doctorUid
-    };
-
-    try {
-      const userDocRef = doc(dbFirestore, 'users', userProfile.uid);
-      await setDoc(userDocRef, updatedProfile);
-      setUserProfile(updatedProfile);
-      
-      if (newRole === 'secretary') {
-        setActiveTab('prescription');
-      }
-    } catch (err) {
-      console.error('Failed to toggle role:', err);
-      alert("Erreur lors de la mise à jour du rôle.");
     }
   };
 
@@ -393,33 +377,11 @@ export default function App() {
   const handleSaveDraft = async (prescription: Prescription, items: PrescriptionItem[]) => {
     if (userProfile) {
       try {
-        // Save the prescription
-        await savePrescriptionToFirestore(prescription, userProfile.doctorUid);
-        
-        // Retrieve and delete any lines no longer in the list to prevent orphaned items
-        const existingItemsQuery = query(
-          collection(dbFirestore, 'prescriptionItems'),
-          where('doctorUid', '==', userProfile.doctorUid),
-          where('prescription_id', '==', prescription.id)
-        );
-        const existingSnap = await getDocs(existingItemsQuery);
-        const newItemsIds = new Set(items.map(i => i.id));
-        
-        for (const docSnap of existingSnap.docs) {
-          if (!newItemsIds.has(docSnap.id)) {
-            await deletePrescriptionItemFromFirestore(docSnap.id);
-          }
-        }
-
-        // Save each item
-        for (const item of items) {
-          await savePrescriptionItemToFirestore(item, userProfile.doctorUid);
-        }
-
-        setActivePrescription(prescription);
-        setActiveItems(items);
-        logAudit('SAVE_DRAFT_PRESCRIPTION', 'PRESCRIPTION', prescription.id, null, prescription);
-        alert(`Brouillon enregistré avec succès (${prescription.prescription_number})`);
+        const saved = await savePrescriptionBundleToFirestore(prescription, items, userProfile.doctorUid);
+        setActivePrescription(saved.prescription);
+        setActiveItems(saved.items);
+        void logAudit('SAVE_DRAFT_PRESCRIPTION', 'PRESCRIPTION', saved.prescription.id, null, saved.prescription);
+        alert(`Brouillon enregistré avec succès (${saved.prescription.prescription_number})`);
       } catch (err) {
         console.error('Failed to save draft to Firestore:', err);
         alert("Erreur lors de la sauvegarde du brouillon.");
@@ -446,30 +408,11 @@ export default function App() {
   const handleSignAndLock = async (prescription: Prescription, items: PrescriptionItem[]) => {
     if (userProfile) {
       try {
-        await savePrescriptionToFirestore(prescription, userProfile.doctorUid);
-        
-        const existingItemsQuery = query(
-          collection(dbFirestore, 'prescriptionItems'),
-          where('doctorUid', '==', userProfile.doctorUid),
-          where('prescription_id', '==', prescription.id)
-        );
-        const existingSnap = await getDocs(existingItemsQuery);
-        const newItemsIds = new Set(items.map(i => i.id));
-        
-        for (const docSnap of existingSnap.docs) {
-          if (!newItemsIds.has(docSnap.id)) {
-            await deletePrescriptionItemFromFirestore(docSnap.id);
-          }
-        }
-
-        for (const item of items) {
-          await savePrescriptionItemToFirestore(item, userProfile.doctorUid);
-        }
-
-        setActivePrescription(prescription);
-        setActiveItems(items);
-        logAudit('SIGN_PRESCRIPTION', 'PRESCRIPTION', prescription.id, null, prescription);
-        alert(`L'ordonnance ${prescription.prescription_number} a été signée numériquement et archivée au dossier.`);
+        const saved = await savePrescriptionBundleToFirestore(prescription, items, userProfile.doctorUid);
+        setActivePrescription(saved.prescription);
+        setActiveItems(saved.items);
+        void logAudit('SIGN_PRESCRIPTION', 'PRESCRIPTION', saved.prescription.id, null, saved.prescription);
+        alert(`L'ordonnance ${saved.prescription.prescription_number} a été signée numériquement et archivée au dossier.`);
       } catch (err) {
         console.error('Failed to sign prescription:', err);
         alert("Erreur lors de la signature de l'ordonnance.");
@@ -792,29 +735,13 @@ export default function App() {
             Veuillez patienter pendant que nous initialisons votre espace de travail sécurisé...
           </p>
 
-          {showBypass && (
-            <div className="w-full bg-amber-50 rounded-xl border border-amber-100 p-4 text-left mb-6 animate-fade-in">
-              <p className="text-xs text-amber-800 font-medium mb-3">
-                ⚠️ Le chargement prend plus de temps que prévu. Si vous utilisez un navigateur avec protection renforcée ou dans un cadre (iframe), l'accès à la base de données peut être ralenti.
-              </p>
-              <div className="flex flex-col space-y-2">
-                <button
-                  onClick={handleBypassAuth}
-                  className="w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Activity className="w-3.5 h-3.5" />
-                  Forcer l'accès (Mode Secouru)
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  Se déconnecter
-                </button>
-              </div>
-            </div>
-          )}
+          <button
+            onClick={handleLogout}
+            className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Se déconnecter
+          </button>
         </div>
       </div>
     );

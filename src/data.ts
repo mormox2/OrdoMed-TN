@@ -639,28 +639,10 @@ export function getDbState(): DbState {
     try {
       const parsed = JSON.parse(stored);
 
-      // Merge medicines to ensure they have access to the full official Tunisian PCT database
-      let medicines = parsed.medicines || INITIAL_MEDICINES;
-      if (medicines.length < INITIAL_MEDICINES.length) {
-        const existingIds = new Set(medicines.map((m: Medicine) => m.id));
-        const missingMedicines = INITIAL_MEDICINES.filter((m) => !existingIds.has(m.id));
-        medicines = [...medicines, ...missingMedicines];
-      }
-
-      // Merge dosage templates — always use the latest generated set
-      let dosageTemplates = parsed.dosageTemplates || INITIAL_DOSAGE_TEMPLATES;
-      {
-        const existingIds = new Set(dosageTemplates.map((t: any) => t.id));
-        const missingTemplates = INITIAL_DOSAGE_TEMPLATES.filter((t) => !existingIds.has(t.id));
-        if (missingTemplates.length > 0) {
-          dosageTemplates = [...dosageTemplates, ...missingTemplates];
-        }
-      }
-
       const mergedState: DbState = {
-        medicines,
+        medicines: INITIAL_MEDICINES,
         aliases: parsed.aliases || [],
-        dosageTemplates,
+        dosageTemplates: INITIAL_DOSAGE_TEMPLATES,
         patients: parsed.patients || INITIAL_PATIENTS,
         prescriptions: parsed.prescriptions || INITIAL_PRESCRIPTIONS,
         prescriptionItems: parsed.prescriptionItems || INITIAL_PRESCRIPTION_ITEMS,
@@ -668,8 +650,8 @@ export function getDbState(): DbState {
         doctorConfig: parsed.doctorConfig || DEFAULT_DOCTOR_CONFIG,
       };
 
-      // Persist the merged state back to localStorage
-      localStorage.setItem('tun_med_prescription_db', JSON.stringify(mergedState));
+      // Ensure we don't save the full static arrays back
+      saveDbState(mergedState);
       return mergedState;
     } catch (e) {
       console.error('Failed to parse DB, using defaults', e);
@@ -687,12 +669,20 @@ export function getDbState(): DbState {
     auditLogs: INITIAL_AUDIT_LOGS,
     doctorConfig: DEFAULT_DOCTOR_CONFIG,
   };
-  localStorage.setItem('tun_med_prescription_db', JSON.stringify(state));
+  saveDbState(state);
   return state;
 }
 
 export function saveDbState(state: DbState) {
-  localStorage.setItem('tun_med_prescription_db', JSON.stringify(state));
+  // To avoid QuotaExceededError (5MB limit on localStorage),
+  // we do not serialize the 6000+ static medicines and 150+ templates.
+  // They are always loaded from the code bundle (INITIAL_MEDICINES, INITIAL_DOSAGE_TEMPLATES).
+  const stateToSave = {
+    ...state,
+    medicines: [],
+    dosageTemplates: []
+  };
+  localStorage.setItem('tun_med_prescription_db', JSON.stringify(stateToSave));
 }
 
 let auditDoctorUid: string | null = null;
