@@ -40,7 +40,7 @@ export default function CabinetDashboard({
 }: CabinetDashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [cnamOnly, setCnamOnly] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'signed' | 'draft'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'signed' | 'draft' | 'patients'>('all');
 
   // Stats calculation
   const totalPatients = patients.length;
@@ -93,9 +93,9 @@ export default function CabinetDashboard({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Patients box */}
         <button 
-          onClick={() => setStatusFilter('all')}
+          onClick={() => setStatusFilter('patients')}
           className={`w-full text-left bg-white p-5 rounded-2xl border-2 shadow-sm flex items-center gap-4 hover:shadow-md transition-all cursor-pointer ${
-            statusFilter === 'all' ? 'border-sky-500 bg-sky-50/30' : 'border-slate-100 border-transparent hover:border-slate-200'
+            statusFilter === 'patients' ? 'border-sky-500 bg-sky-50/30' : 'border-slate-100 border-transparent hover:border-slate-200'
           }`}
         >
           <div className="p-3.5 bg-sky-50 text-sky-600 rounded-xl">
@@ -145,8 +145,12 @@ export default function CabinetDashboard({
         {/* Header containing Filters */}
         <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="font-bold text-slate-800 text-sm">Activité récente & Suivi de prescription</h3>
-            <p className="text-xs text-slate-400">Recherchez ou gérez l'ensemble des ordonnances délivrées par le cabinet</p>
+            <h3 className="font-bold text-slate-800 text-sm">
+              {statusFilter === 'patients' ? 'Liste des Patients Enregistrés' : 'Activité récente & Suivi de prescription'}
+            </h3>
+            <p className="text-xs text-slate-400">
+              {statusFilter === 'patients' ? 'Recherchez et gérez les dossiers patients de votre cabinet' : "Recherchez ou gérez l'ensemble des ordonnances délivrées par le cabinet"}
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -176,7 +180,64 @@ export default function CabinetDashboard({
         </div>
 
         {/* Content list */}
-        {filteredPrescriptions.length > 0 ? (
+        {statusFilter === 'patients' ? (
+          (() => {
+            const filteredPatients = patients.filter(p => {
+              const fullName = `${p.name_first} ${p.name_last}`.toLowerCase();
+              const revName = `${p.name_last} ${p.name_first}`.toLowerCase();
+              const query = searchQuery.toLowerCase();
+              return fullName.includes(query) || revName.includes(query);
+            });
+            
+            return filteredPatients.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                      <th className="py-3.5 px-6">Nom Complet</th>
+                      <th className="py-3.5 px-6">Date de Naissance</th>
+                      <th className="py-3.5 px-6">Genre</th>
+                      <th className="py-3.5 px-6">Téléphone</th>
+                      <th className="py-3.5 px-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                    {filteredPatients.map((patient) => (
+                      <tr key={patient.id} className="hover:bg-slate-50/40 transition-colors">
+                        <td className="py-4 px-6 font-semibold text-slate-800">
+                          {patient.name_last.toUpperCase()} {patient.name_first}
+                        </td>
+                        <td className="py-4 px-6 font-medium text-slate-500">
+                          {new Date(patient.birth_date).toLocaleDateString('fr-FR')}
+                        </td>
+                        <td className="py-4 px-6 text-slate-600">
+                          {patient.gender === 'M' ? 'Masculin' : 'Féminin'}
+                        </td>
+                        <td className="py-4 px-6 text-slate-600">
+                          {patient.phone || '-'}
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            onClick={() => onSelectPatient(patient)}
+                            className="px-2.5 py-1 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 inline-flex"
+                          >
+                            Ouvrir Dossier
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-16 text-center text-slate-400 flex flex-col items-center justify-center space-y-2">
+                <Users className="w-10 h-10 text-slate-200" />
+                <div className="text-xs">Aucun patient correspondant trouvé.</div>
+              </div>
+            );
+          })()
+        ) : filteredPrescriptions.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
