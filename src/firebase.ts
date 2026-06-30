@@ -2,20 +2,19 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 import localConfig from '../firebase-applet-config.json';
-
-// Support production override via Vercel / Netlify environment variables
-const metaEnv = (import.meta as any).env || {};
-
-const isOverrideProject = metaEnv.VITE_FIREBASE_PROJECT_ID && metaEnv.VITE_FIREBASE_PROJECT_ID !== localConfig.projectId;
+// In Vite, environment variables must be accessed explicitly so they are replaced at build time.
+// Do NOT use dynamic keys or abstraction functions for import.meta.env.
+const overrideProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+const isOverrideProject = overrideProjectId && overrideProjectId !== localConfig.projectId;
 
 const firebaseConfig = {
-  apiKey: metaEnv.VITE_FIREBASE_API_KEY || localConfig.apiKey,
-  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain,
-  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID || localConfig.projectId,
-  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket,
-  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId,
-  appId: metaEnv.VITE_FIREBASE_APP_ID || localConfig.appId,
-  firestoreDatabaseId: metaEnv.VITE_FIREBASE_DATABASE_ID || (isOverrideProject ? "(default)" : (localConfig.firestoreDatabaseId || "(default)"))
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || localConfig.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain,
+  projectId: overrideProjectId || localConfig.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || localConfig.appId,
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || (isOverrideProject ? "(default)" : (localConfig.firestoreDatabaseId || "(default)"))
 };
 
 // CRITICAL HARDCODED FALLBACK: If running on Vercel/production under this project,
