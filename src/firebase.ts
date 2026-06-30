@@ -6,6 +6,8 @@ import localConfig from '../firebase-applet-config.json';
 // Support production override via Vercel / Netlify environment variables
 const metaEnv = (import.meta as any).env || {};
 
+const isOverrideProject = metaEnv.VITE_FIREBASE_PROJECT_ID && metaEnv.VITE_FIREBASE_PROJECT_ID !== localConfig.projectId;
+
 const firebaseConfig = {
   apiKey: metaEnv.VITE_FIREBASE_API_KEY || localConfig.apiKey,
   authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || localConfig.authDomain,
@@ -13,7 +15,7 @@ const firebaseConfig = {
   storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || localConfig.storageBucket,
   messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || localConfig.messagingSenderId,
   appId: metaEnv.VITE_FIREBASE_APP_ID || localConfig.appId,
-  firestoreDatabaseId: metaEnv.VITE_FIREBASE_DATABASE_ID || localConfig.firestoreDatabaseId || "(default)"
+  firestoreDatabaseId: metaEnv.VITE_FIREBASE_DATABASE_ID || (isOverrideProject ? "(default)" : (localConfig.firestoreDatabaseId || "(default)"))
 };
 
 // CRITICAL HARDCODED FALLBACK: If running on Vercel/production under this project,
