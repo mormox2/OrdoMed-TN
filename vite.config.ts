@@ -6,7 +6,8 @@ import { defineConfig, Plugin } from 'vite';
 
 /**
  * Plugin Vite : surveille liste_amm.xlsx et régénère pct_medications.json
- * automatiquement en mode dev, et avant chaque build.
+ * lorsqu'il change en mode développement. Les générations initiales sont
+ * prises en charge par les hooks npm predev et prebuild.
  */
 function ammWatcherPlugin(): Plugin {
   const xlsxPath = path.resolve(__dirname, 'liste_amm.xlsx');
@@ -24,11 +25,7 @@ function ammWatcherPlugin(): Plugin {
 
   return {
     name: 'amm-xlsx-watcher',
-
-    // Exécuté au démarrage du serveur dev
-    buildStart() {
-      runConversion('Démarrage');
-    },
+    apply: 'serve',
 
     // Surveille liste_amm.xlsx en mode dev
     configureServer(server) {

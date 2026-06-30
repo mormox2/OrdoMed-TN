@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "npm run generate:medications",
     "dev": "vite --port=3000 --host=0.0.0.0",
     "generate:medications": "node scripts/convert_amm_xlsx_to_json.cjs && node scripts/generate_dosage_templates.cjs && node scripts/generate_interactions.cjs",
     "prebuild": "node scripts/convert_amm_xlsx_to_json.cjs && node scripts/generate_dosage_templates.cjs && node scripts/generate_interactions.cjs",
