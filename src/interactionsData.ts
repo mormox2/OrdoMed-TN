@@ -4,17 +4,22 @@
  */
 
 import { INITIAL_MEDICINES } from './data';
+import interactionsDb from './drug_interactions.json';
 
 export interface DrugInteractionRule {
   id: string;
-  substanceA: string; // Lowercase, normalized, e.g., "furosemide"
-  substanceB: string; // Lowercase, normalized, e.g., "ketoprofene"
+  substanceA: string; // Can be a normalized DCI or a class like "@CLASS:AINS"
+  substanceB: string;
   severity: 'critical' | 'warning' | 'info';
   title_fr: string;
   title_ar: string;
   description_fr: string;
   description_ar: string;
 }
+
+// Ensure the cast since JSON imports are loosely typed
+const DRUG_INTERACTIONS = interactionsDb.rules as DrugInteractionRule[];
+const PHARMA_CLASSES = interactionsDb.classes as Record<string, string[]>;
 
 // Normalize DCI name for comparison (remove accents, space, make lowercase, simplify plural/terms)
 export function normalizeSubstanceName(name: string): string {
@@ -35,139 +40,6 @@ export function splitCompoundSubstances(dciString?: string): string[] {
     .filter(part => part.length > 2) // Filter out short parts
     .map(part => normalizeSubstanceName(part));
 }
-
-export const DRUG_INTERACTIONS: DrugInteractionRule[] = [
-  {
-    id: 'int-1',
-    substanceA: 'furosemide',
-    substanceB: 'ketoprofene',
-    severity: 'warning',
-    title_fr: 'AINS + Diurétique (Lasilix + Profenid)',
-    title_ar: 'مضاد التهاب + مدر للبول',
-    description_fr: "Risque d'insuffisance rénale aiguë par réduction de la filtration glomérulaire (notamment en cas de déshydratation). Diminution de l'effet diurétique du Lasilix. Veillez à maintenir une hydratation adéquate et à surveiller la fonction rénale.",
-    description_ar: "خطر حدوث قصور كلوي حاد بسبب انخفاض تصفية الكلى (خاصة في حالة الجفاف). تراجع مفعول لازيليكس كمدر للبول. يرجى الحفاظ على ترطيب كاف ومراقبة وظائف الكلى."
-  },
-  {
-    id: 'int-2',
-    substanceA: 'furosemide',
-    substanceB: 'diclofenac',
-    severity: 'warning',
-    title_fr: 'AINS + Diurétique (Lasilix + Artotec)',
-    title_ar: 'مضاد التهاب + مدر للبول',
-    description_fr: "Risque d'insuffisance rénale aiguë par réduction de la filtration glomérulaire. Diminution de l'effet diurétique du Lasilix. Assurer une hydratation adéquate et surveiller l'urée/créatinine.",
-    description_ar: "خطر حدوث قصور كلوي حاد بسبب انخفاض تصفية الكلى. تراجع مفعول لازيليكس كمدر للبول. يرجى ضمان ترطيب مناسب ومراقبة اليوريا والكراتينين."
-  },
-  {
-    id: 'int-3',
-    substanceA: 'ketoprofene',
-    substanceB: 'diclofenac',
-    severity: 'critical',
-    title_fr: 'Multi-prescription d\'AINS (Profenid + Artotec)',
-    title_ar: 'تعدد مضادات الالتهاب غير الستيروئيدية',
-    description_fr: "Association déconseillée de deux anti-inflammatoires non stéroïdiens (AINS) : Augmentation majeure du risque d'ulcère gastroduodénal et d'hémorragie digestive sévère, sans aucun bénéfice thérapeutique supplémentaire.",
-    description_ar: "لا ينصح بالجمع بين مضادين للالتهاب غير ستيروئيديين: زيادة كبيرة في خطر الإصابة بقرحة المعدة والنزيف المعوي الحاد، دون أي فائدة علاجية إضافية."
-  },
-  {
-    id: 'int-4',
-    substanceA: 'alprazolam',
-    substanceB: 'tramadol',
-    severity: 'critical',
-    title_fr: 'Benzodiazépine + Opioïde (Xanax + Tramadol)',
-    title_ar: 'بنزوديازيبين + أفيوني',
-    description_fr: "Association à haut risque : Risque majeur de dépression respiratoire sévère, de sédation profonde, de coma et de décès. Limiter les doses et la durée au strict minimum si l'association est inévitable.",
-    description_ar: "مزيج عالي الخطورة: خطر كبير لحدوث فشل تنفسي حاد، خمول شديد، غيبوبة أو الوفاة. يرجى تقليل الجرعات والمدة إلى الحد الأدنى إذا كان الجمع ضرورياً."
-  },
-  {
-    id: 'int-5',
-    substanceA: 'alprazolam',
-    substanceB: 'codeine',
-    severity: 'critical',
-    title_fr: 'Benzodiazépine + Opioïde (Xanax + Codeine)',
-    title_ar: 'بنزوديازيبين + أفيوني',
-    description_fr: "Association à haut risque : Risque accru de dépression respiratoire, de somnolence extrême et de coma. À éviter ou à surveiller de très près.",
-    description_ar: "مزيج عالي الخطورة: زيادة خطر تثبيط الجهاز التنفسي والنعاس الشديد والغيبوبة. ينصح بتجنبه أو المراقبة اللصيقة."
-  },
-  {
-    id: 'int-6',
-    substanceA: 'sildenafil',
-    substanceB: 'trinitrine',
-    severity: 'critical',
-    title_fr: 'Dérivé nitré + Inhibiteur PDE5 (Sildenafil + Trinitrine)',
-    title_ar: 'مشتقات النترات + سيلدينافيل',
-    description_fr: "Contre-indication absolue : Risque d'hypotension artérielle sévère, brutale et potentiellement mortelle. Ne jamais associer ces substances.",
-    description_ar: "ممنوع تماماً: خطر حدوث انخفاض حاد ومفاجئ في ضغط الدم قد يهدد الحياة. لا تقم بالجمع بينهما أبداً."
-  },
-  {
-    id: 'int-7',
-    substanceA: 'sildenafil',
-    substanceB: 'isosorbide',
-    severity: 'critical',
-    title_fr: 'Dérivé nitré + Inhibiteur PDE5 (Sildenafil + Isosorbide)',
-    title_ar: 'مشتقات النترات + سيلدينافيل',
-    description_fr: "Contre-indication absolue : Risque d'hypotension systémique sévère, incontrôlable et potentiellement fatale. Association strictement interdite.",
-    description_ar: "ممنوع تماماً: خطر حدوث انخفاض شديد وغير منضبط في ضغط الدم قد يؤدي للوفاة. يمنع الجمع بينهما قطعياً."
-  },
-  {
-    id: 'int-8',
-    substanceA: 'furosemide',
-    substanceB: 'metformine',
-    severity: 'warning',
-    title_fr: 'Diurétique + Metformine (Lasilix + Glucophage)',
-    title_ar: 'مدر للبول + ميتفورمين',
-    description_fr: "Risque d'acidose lactique provoqué par une éventuelle insuffisance rénale fonctionnelle liée au diurétique (Lasilix). Arrêter la Metformine temporairement en cas de déshydratation ou d'insuffisance rénale aiguë.",
-    description_ar: "خطر الإصابة بالحماض اللبني (Lactic Acidosis) نتيجة قصور كلوي وظيفي محتمل بسبب مدر البول. يجب إيقاف الميتفورمين مؤقتاً في حالة الجفاف أو القصور الكلوي."
-  },
-  {
-    id: 'int-9',
-    substanceA: 'warfarin',
-    substanceB: 'aspirin',
-    severity: 'critical',
-    title_fr: 'Anticoagulant + Antiagrégant (Warfarine + Aspirine)',
-    title_ar: 'مضاد تخثر + مضاد صفائح',
-    description_fr: "Risque hémorragique majeur. Augmentation très significative des saignements gastro-intestinaux et intracrâniens. Surveillance biologique étroite (INR) indispensable si l'association est absolument requise.",
-    description_ar: "خطر نزيف حاد: زيادة كبيرة في نزيف الجهاز الهضمي والنزيف الدماغي. مراقبة بيولوجية دقيقة (INR) ضرورية للغاية إذا كان الجمع ضرورياً."
-  },
-  {
-    id: 'int-10',
-    substanceA: 'warfarin',
-    substanceB: 'ketoprofene',
-    severity: 'critical',
-    title_fr: 'Anticoagulant + AINS (Warfarine + Profenid)',
-    title_ar: 'مضاد تخثر + مضاد التهاب',
-    description_fr: "Association contre-indiquée : Majoration très importante du risque d'hémorragie par agression de la muqueuse digestive par l'AINS et inhibition de l'agrégation plaquettaire. Utiliser le paracétamol pour la douleur.",
-    description_ar: "ممنوع الجمع بينهما: زيادة هائلة في خطر النزيف نتيجة تأثير مضاد الالتهاب على غشاء المعدة وتثبيط الصفائح الدموية. يفضل استخدام الباراسيتامول لتسكين الألم."
-  },
-  {
-    id: 'int-11',
-    substanceA: 'warfarin',
-    substanceB: 'diclofenac',
-    severity: 'critical',
-    title_fr: 'Anticoagulant + AINS (Warfarine + Artotec)',
-    title_ar: 'مضاد تخثر + مضاد التهاب',
-    description_fr: "Association déconseillée : Risque hémorragique très élevé dû à l'effet antiagrégant plaquettaire et ulcérogène du Diclofénac associé à l'effet anticoagulant de la Warfarine.",
-    description_ar: "لا ينصح بالجمع بينهما: خطر نزيف مرتفع جداً بسبب تأثير ديكلوفينات المضاد للصفائح والمسبب للقرحة مع تأثير مضاد التخثر للوارفارين."
-  },
-  {
-    id: 'int-12',
-    substanceA: 'methotrexate',
-    substanceB: 'ketoprofene',
-    severity: 'critical',
-    title_fr: 'Méthotrexate + AINS (Methotrexate + Profenid)',
-    title_ar: 'ميثوتريكسات + مضاد التهاب',
-    description_fr: "Toxicité accrue du Méthotrexate : Les AINS diminuent fortement l'excrétion rénale du Méthotrexate, entraînant un risque de toxicité hématologique (pancytopénie) et rénale sévère, potentiellement mortelle.",
-    description_ar: "زيادة سمية الميثوتريكسات: تقلل مضادات الالتهاب بشدة من طرح الميثوتريكسات عبر الكلى، مما يؤدي إلى خطر سمية دموية وكلية شديدة قد تكون قاتلة."
-  },
-  {
-    id: 'int-13',
-    substanceA: 'acénocoumarol',
-    substanceB: 'aspirine',
-    severity: 'critical',
-    title_fr: 'Anticoagulant + Antiagrégant (Sintrom + Aspirine)',
-    title_ar: 'مضاد تخثر + مضاد صفائح',
-    description_fr: "Risque d'hémorragie sévère par majoration de l'effet anticoagulant. Association contre-indiquée.",
-    description_ar: "خطر حدوث نزيف حاد بسبب زيادة مفعول مضاد التخثر."
-  }
-];
 
 function getLevenshteinDistance(a: string, b: string): number {
   const matrix = [];
@@ -258,19 +130,8 @@ export function isDciInAllergyClass(dciNorm: string, allergyNorm: string): boole
                         allergyNorm.includes('anti-inflam') ||
                         allergyNorm.includes('nsaid');
                         
-  const ainsSubstances = [
-    'ketoprofene',
-    'diclofenac',
-    'ibuprofene',
-    'aspirine',
-    'aspirin',
-    'acide niflumique',
-    'piroxicam',
-    'naproxene',
-    'meloxicam',
-    'celecoxib'
-  ];
-  const isDciAins = ainsSubstances.some(sub => dciNorm.includes(sub) || sub.includes(dciNorm));
+  const ainsSubstances = PHARMA_CLASSES['@CLASS:AINS'] || [];
+  const isDciAins = ainsSubstances.some(sub => dciNorm.includes(normalizeSubstanceName(sub)) || normalizeSubstanceName(sub).includes(dciNorm));
   
   if (isAllergyAins && isDciAins) {
     return true;
@@ -279,7 +140,7 @@ export function isDciInAllergyClass(dciNorm: string, allergyNorm: string): boole
   return false;
 }
 
-// Helper to check if a patient is allergic to a specific medicine (including checking each active sub-substance!)
+// Helper to check if a patient is allergic to a specific medicine
 export function checkMedicineAllergies(
   medicineName: string,
   dciName: string | undefined,
@@ -289,19 +150,16 @@ export function checkMedicineAllergies(
     return { isAllergic: false, matchedAllergen: '' };
   }
 
-  // Clean brand name from suffixes like "(Hors Base)" or "(En cours)"
   let cleanBrand = medicineName
     .replace(/\(hors base\)/gi, '')
     .replace(/\(en cours\)/gi, '')
     .trim();
 
-  // Extract the first word or main name before strengths/forms, e.g., "CLAMOXYL 500MG" -> "CLAMOXYL"
   const brandWordMatch = cleanBrand.match(/^([A-Za-z0-9éèàâûîôäëïöüç]+)/i);
   const brandWord = brandWordMatch ? brandWordMatch[1] : cleanBrand;
 
   let resolvedDci = dciName;
   if (!resolvedDci && cleanBrand) {
-    // Search the catalog for a medicine that matches this brand word
     const matchedMed = INITIAL_MEDICINES.find(
       (m) =>
         normalizeSubstanceName(m.name_brand) === normalizeSubstanceName(brandWord) ||
@@ -320,18 +178,15 @@ export function checkMedicineAllergies(
     const allergyNorm = normalizeSubstanceName(allergy);
     if (!allergyNorm) continue;
 
-    // Check brand name allergy (with fuzzy matching or class match)
     if (isFuzzyMatch(brandNorm, allergyNorm) || isDciInAllergyClass(brandNorm, allergyNorm)) {
       return { isAllergic: true, matchedAllergen: allergy };
     }
 
-    // Check brand word match directly
     const brandWordNorm = normalizeSubstanceName(brandWord);
     if (isFuzzyMatch(brandWordNorm, allergyNorm) || isDciInAllergyClass(brandWordNorm, allergyNorm)) {
       return { isAllergic: true, matchedAllergen: allergy };
     }
 
-    // Check individual DCI substances (with fuzzy matching or class match)
     for (const sub of individualSubstances) {
       if (isFuzzyMatch(sub, allergyNorm) || isDciInAllergyClass(sub, allergyNorm)) {
         return { isAllergic: true, matchedAllergen: allergy };
@@ -353,6 +208,35 @@ export interface DetectedInteraction {
   description_ar: string;
   medicineALabel: string;
   medicineBLabel: string;
+}
+
+// Resolves a DCI into all its applicable pharmacological classes
+function getSubstanceClasses(substanceNorm: string): string[] {
+  const classes: string[] = [];
+  for (const [className, dciList] of Object.entries(PHARMA_CLASSES)) {
+    // If the substance includes any of the class members, it belongs to the class
+    const isMember = dciList.some(dci => {
+      const dciNorm = normalizeSubstanceName(dci);
+      return substanceNorm.includes(dciNorm) || dciNorm.includes(substanceNorm);
+    });
+    if (isMember) {
+      classes.push(className);
+    }
+  }
+  return classes;
+}
+
+// Checks if a given normalized DCI matches a rule term (which can be a class or a DCI)
+function doesSubstanceMatchRuleTerm(substanceNorm: string, ruleTerm: string): boolean {
+  if (ruleTerm.startsWith('@CLASS:')) {
+    // Check if the substance belongs to this class
+    const classes = getSubstanceClasses(substanceNorm);
+    return classes.includes(ruleTerm);
+  } else {
+    // Check string match directly (permissive includes instead of strict equality)
+    const ruleTermNorm = normalizeSubstanceName(ruleTerm);
+    return substanceNorm.includes(ruleTermNorm) || ruleTermNorm.includes(substanceNorm);
+  }
 }
 
 // Check all current items on prescription for drug-drug interactions
@@ -377,14 +261,18 @@ export function checkDrugInteractions(
       for (const subA of substancesA) {
         for (const subB of substancesB) {
           // Find matching rule
-          const matchedRule = DRUG_INTERACTIONS.find(rule => {
-            const ruleA_norm = normalizeSubstanceName(rule.substanceA);
-            const ruleB_norm = normalizeSubstanceName(rule.substanceB);
-            return (ruleA_norm === subA && ruleB_norm === subB) ||
-                   (ruleA_norm === subB && ruleB_norm === subA);
+          const matchedRules = DRUG_INTERACTIONS.filter(rule => {
+            const matchForward = doesSubstanceMatchRuleTerm(subA, rule.substanceA) && 
+                                 doesSubstanceMatchRuleTerm(subB, rule.substanceB);
+            
+            const matchBackward = doesSubstanceMatchRuleTerm(subA, rule.substanceB) && 
+                                  doesSubstanceMatchRuleTerm(subB, rule.substanceA);
+
+            return matchForward || matchBackward;
           });
 
-          if (matchedRule) {
+          // Add all matched rules
+          for (const matchedRule of matchedRules) {
             const pairKey = [itemA.id, itemB.id, matchedRule.id].sort().join('-');
             if (!processedPairs.has(pairKey)) {
               processedPairs.add(pairKey);
@@ -435,12 +323,14 @@ export function checkTherapeuticOverlaps(
 
       // Find common active ingredients
       for (const subA of substancesA) {
-        if (substancesB.includes(subA)) {
+        // Also check with includes to catch slight variations like "diclofenac sodique" vs "diclofenac"
+        const overlapsWithB = substancesB.some(subB => subA.includes(subB) || subB.includes(subA));
+        
+        if (overlapsWithB) {
           const overlapKey = [itemA.id, itemB.id, subA].sort().join('-');
           if (!processedOverlaps.has(overlapKey)) {
             processedOverlaps.add(overlapKey);
             
-            // Format name nicely (capitalized)
             const capSubstance = subA.charAt(0).toUpperCase() + subA.slice(1);
             overlaps.push({
               substance: capSubstance,
