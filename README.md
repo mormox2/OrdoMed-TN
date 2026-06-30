@@ -50,7 +50,7 @@ Dr Rtimi Mossaab
 ### 9. Gestion Multi-Comptes & Secrétariat Connecté
 * **Restriction de l'inscription** : Seul un médecin peut s'enregistrer initialement et posséder le compte principal du cabinet.
 * **Comptes Secrétaires Annexes** : Depuis son espace de travail, le médecin peut ajouter et lier des comptes de secrétariat en saisissant leur adresse e-mail.
-* **Validation Automatique & Immédiate** : Le médecin peut définir un mot de passe d'accès direct lors de la création du compte secrétaire (ou opter pour l'authentification Google). Le compte de la secrétaire est validé automatiquement dès sa création, lui évitant toute période d'attente ou statut suspendu, et lui permettant de s'authentifier immédiatement pour gérer les dossiers patients.
+* **Invitation à Usage Unique** : Le médecin invite une secrétaire par e-mail. Elle réclame automatiquement l'invitation lors de sa première connexion Google ou inscription e-mail avec cette adresse ; le médecin ne choisit jamais son mot de passe.
 
 ---
 
@@ -74,8 +74,9 @@ Dr Rtimi Mossaab
 ## 🛠️ Installation et Démarrage
 
 ### Prérequis
-* Node.js (v18 ou supérieur recommandé)
+* Node.js 20 ou supérieur (Node.js 22 LTS recommandé)
 * npm ou yarn
+* Java 21 pour l'émulateur et les tests de règles Firestore
 
 ### Instructions
 
@@ -100,6 +101,11 @@ Dr Rtimi Mossaab
    npm run lint
    ```
 
+5. **Exécuter tous les contrôles (types, règles Firestore et build)** :
+   ```bash
+   npm run check
+   ```
+
 ---
 
 ## 🧪 Validation & Tests Intégrés
@@ -109,6 +115,8 @@ L'application inclut une console de tests automatisés accessible directement en
 * La détection rigoureuse des allergies médicamenteuses.
 * La détection précise des interactions critiques (ex: **Aspirine** et **Sintrom / Acénocoumarol**).
 * Le blocage strict des prescriptions de psychotropes supérieures à 28 jours.
+
+Les règles Firestore disposent également d'une suite d'émulateur automatisée couvrant l'isolation entre cabinets, les droits des secrétaires, les invitations, l'immuabilité des ordonnances signées et les journaux d'audit append-only. Lancez-la avec `npm run test:rules`.
 
 ---
 

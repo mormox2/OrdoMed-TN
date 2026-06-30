@@ -53,6 +53,14 @@ interface PrescriptionFormProps {
   onReset: () => void;
 }
 
+function createPrescriptionNumber(): string {
+  const year = new Date().getFullYear();
+  const randomPart = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID().replaceAll('-', '').slice(0, 16)
+    : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`.slice(0, 16);
+  return `ORD-${year}-${randomPart.toUpperCase()}`;
+}
+
 export default function PrescriptionForm({
   patient,
   medicines,
@@ -345,7 +353,7 @@ export default function PrescriptionForm({
   const handleSave = () => {
     if (!patient) return;
     const presId = activePrescription?.id || 'pres-' + Math.random().toString(36).substr(2, 9);
-    const presNumber = activePrescription?.prescription_number || `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const presNumber = activePrescription?.prescription_number || createPrescriptionNumber();
     const ageStr = patient ? `${getPatientAge(patient.birth_date)} ans` : '';
 
     const prescription: Prescription = {
@@ -476,7 +484,7 @@ export default function PrescriptionForm({
     }
 
     const presId = activePrescription?.id || 'pres-' + Math.random().toString(36).substr(2, 9);
-    const presNumber = activePrescription?.prescription_number || `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const presNumber = activePrescription?.prescription_number || createPrescriptionNumber();
     const ageStr = `${getPatientAge(patient.birth_date)} ans`;
 
     const prescription: Prescription = {
@@ -512,7 +520,7 @@ export default function PrescriptionForm({
     if (items.length === 0) return;
 
     const presId = activePrescription?.id || 'pres-draft-' + Math.random().toString(36).substr(2, 9);
-    const presNumber = activePrescription?.prescription_number || `ORD-2026-DRAFT`;
+    const presNumber = activePrescription?.prescription_number || `ORD-${new Date().getFullYear()}-BROUILLON`;
     const ageStr = `${getPatientAge(patient.birth_date)} ans`;
 
     const prescription: Prescription = {

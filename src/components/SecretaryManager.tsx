@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, UserX, Shield, Mail, Loader2, CheckCircle, AlertCircle, RefreshCw, Key, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, UserX, Shield, Mail, Loader2, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { createSecretaryAccount, fetchSecretaries, deleteSecretaryProfile, UserProfile } from '../services/dbService';
 
 interface SecretaryManagerProps {
@@ -9,8 +9,6 @@ interface SecretaryManagerProps {
 export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
   const [secretaries, setSecretaries] = useState<UserProfile[]>([]);
   const [emailInput, setEmailInput] = useState('');
-  const [passwordInput, setPasswordInput] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,13 +40,6 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
     setSuccess(null);
 
     const targetEmail = emailInput.trim().toLowerCase();
-    const pass = passwordInput.trim();
-
-    if (pass && pass.length < 6) {
-      setError("Le mot de passe d'accès direct doit contenir au moins 6 caractères.");
-      setActionLoading(false);
-      return;
-    }
 
     // Prevent duplicate secretary email
     if (secretaries.some(s => s.email === targetEmail)) {
@@ -58,15 +49,9 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
     }
 
     try {
-      await createSecretaryAccount(doctorUid, targetEmail, pass || undefined);
+      await createSecretaryAccount(doctorUid, targetEmail);
       setEmailInput('');
-      setPasswordInput('');
-      
-      if (pass) {
-        setSuccess(`Le compte de la secrétaire "${targetEmail}" a été créé et validé automatiquement. Elle peut s'identifier directement avec cet e-mail et son mot de passe.`);
-      } else {
-        setSuccess(`Le compte secrétaire "${targetEmail}" (Accès Google) a été configuré et validé automatiquement.`);
-      }
+      setSuccess(`L'invitation de "${targetEmail}" est prête. Elle sera liée au cabinet lors de sa première connexion.`);
       
       await loadSecretaries();
     } catch (err: any) {
@@ -141,7 +126,7 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
 
         {/* Form to Add Secretary */}
         <form onSubmit={handleAddSecretary} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1.5">
                 Adresse e-mail de la secrétaire *
@@ -159,39 +144,15 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center justify-between">
-                <span>Mot de passe d'accès direct (Optionnel)</span>
-                <span className="text-[10px] text-slate-400 font-normal">Min. 6 car.</span>
-              </label>
-              <div className="relative">
-                <Key className="absolute left-3.5 top-3 w-4.5 h-4.5 text-slate-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                  placeholder="Laisser vide pour Google Auth"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-slate-600"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
           </div>
 
           <div className="flex items-center justify-between gap-4 pt-2">
             <div className="text-[11px] text-slate-500 max-w-xl space-y-1">
               <p>
-                ⚡ <strong>Validation automatique et instantanée :</strong> Aucun e-mail d'invitation n'est nécessaire. Le compte de la secrétaire est activé immédiatement. 
-                Si vous indiquez un mot de passe, elle s'identifie avec l'e-mail et le mot de passe. Sinon, elle s'identifie avec son compte Google.
+                ⚡ <strong>Accès contrôlé :</strong> l'invitation est réclamée automatiquement à la première connexion Google ou inscription e-mail effectuée avec cette adresse. Le médecin ne définit jamais le mot de passe de la secrétaire.
               </p>
               <p className="text-right text-[10px] text-slate-400 font-medium" dir="rtl">
-                ⚡ <strong>تفعيل فوري وتلقائي للحساب :</strong> لا داعي لإرسال أو تفعيل عبر البريد الإلكتروني. الحساب يُنشأ ويُفعّل مباشرةً. بإمكان السكرتيرة الدخول فوراً باستخدام حسابها أو كلمة المرور المعينة.
+                ⚡ <strong>وصول آمن:</strong> يتم ربط الدعوة تلقائياً عند أول تسجيل دخول أو إنشاء حساب بنفس عنوان البريد الإلكتروني. لا يحدد الطبيب كلمة مرور السكرتيرة.
               </p>
             </div>
             <button
@@ -204,7 +165,7 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
               ) : (
                 <UserPlus className="w-4 h-4" />
               )}
-              Créer Compte Secrétaire
+              Inviter la secrétaire
             </button>
           </div>
         </form>
@@ -226,7 +187,7 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {secretaries.map((s) => {
-                const isPendingGoogle = s.uid.startsWith('email:');
+                const isPendingGoogle = s.uid.startsWith('email:') || s.uid.startsWith('invite:');
                 return (
                   <div
                     key={s.uid}
@@ -238,10 +199,10 @@ export default function SecretaryManager({ doctorUid }: SecretaryManagerProps) {
                       </div>
                       <div className="flex flex-wrap gap-1.5 pt-0.5">
                         <span className="px-1.5 py-0.5 bg-teal-50 text-teal-700 border border-teal-100 rounded-md text-[9px] font-semibold tracking-wide">
-                          Compte Validé & Actif
+                          {isPendingGoogle ? 'Invitation en attente' : 'Compte validé et actif'}
                         </span>
                         <span className="px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-100 rounded-md text-[9px] font-medium">
-                          {isPendingGoogle ? 'Accès Google Auth' : 'Accès Direct'}
+                          {isPendingGoogle ? 'Invitation e-mail' : 'Compte lié'}
                         </span>
                       </div>
                       <div className="text-[9px] text-slate-400 pt-0.5">
