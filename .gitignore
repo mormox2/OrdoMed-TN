@@ -6,3 +6,8 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Generated Data Files
+src/pct_medications.json
+src/dosage_templates.json
+src/drug_interactions.json
