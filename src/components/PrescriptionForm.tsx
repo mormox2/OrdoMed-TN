@@ -34,13 +34,14 @@ import {
   Scale,
   Activity
 } from 'lucide-react';
-import { logAudit, normalizeSearchText } from '../data';
+import { logAudit } from '../data';
 import {
   checkMedicineAllergies, 
   checkDrugInteractions, 
   checkTherapeuticOverlaps 
 } from '../interactionsData';
 import { findMatchingDosageTemplates } from '../utils/dosageTemplates';
+import { searchMedicines } from '../utils/medicineSearch';
 
 interface PrescriptionFormProps {
   patient: Patient | null;
@@ -144,17 +145,7 @@ export default function PrescriptionForm({
 
     setIsSearching(true);
     debounceRef.current = setTimeout(() => {
-      const normalizedQuery = normalizeSearchText(searchQuery);
-
-      // Perform matching
-      const results = medicines.filter((m) => {
-        const matchesBrand = m.name_normalized.includes(normalizedQuery) || m.name_brand.toLowerCase().includes(normalizedQuery);
-        const matchesDCI = m.dci_normalized.includes(normalizedQuery) || m.dci_name.toLowerCase().includes(normalizedQuery);
-        const matchesPCT = m.pct_code && m.pct_code.includes(normalizedQuery);
-        const matchesClass = m.therapeutic_class && m.therapeutic_class.toLowerCase().includes(normalizedQuery);
-
-        return matchesBrand || matchesDCI || matchesPCT || matchesClass;
-      });
+      const results = searchMedicines(medicines, searchQuery);
 
       setTotalMatches(results.length);
       setAutocompleteResults(results.slice(0, 15)); // Limit to a maximum of 15 suggestions
