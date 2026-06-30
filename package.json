@@ -13,8 +13,9 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "test:classification": "node --test tests/regulatory-classification.test.cjs",
+    "test:templates": "tsx --test tests/dosage-templates.test.ts",
     "test:rules": "npx --yes firebase-tools@15.22.3 emulators:exec --project demo-ordomed --only firestore \"node --test tests/firestore.rules.test.mjs\"",
-    "check": "npm run lint && npm run test:classification && npm run test:rules && npm run build"
+    "check": "npm run lint && npm run test:classification && npm run test:templates && npm run test:rules && npm run build"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

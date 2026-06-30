@@ -722,6 +722,32 @@ const templates = [
     needs_weight: true,
   }),
 
+  // Clarithromycine
+  t('Clarithromycine', 'Infections respiratoires, ORL, cutanées et des tissus mous à germes sensibles', 'adult', {
+    dose_fr: '1 comprimé (250 mg), jusqu’à 500 mg si infection sévère', dose_ar: 'قرص واحد (250 مغ)، حتى 500 مغ في العدوى الشديدة',
+    freq_fr: '2 fois par jour (toutes les 12 heures)', freq_ar: 'مرتين يومياً (كل 12 ساعة)',
+    dur_fr: '6 à 14 jours selon le site et la gravité', dur_ar: 'من 6 إلى 14 يوماً حسب موضع العدوى وشدتها',
+    max_daily: '1 g/j',
+    warn_fr: 'Vérifier les interactions CYP3A4 et le risque d’allongement du QT. Contre-indiquée avec simvastatine/lovastatine et colchicine. Si clairance de la créatinine < 30 mL/min : réduire la dose de moitié et ne pas dépasser 14 jours.',
+    warn_ar: 'التحقق من تداخلات CYP3A4 وخطر إطالة QT. يمنع مع سيمفاستاتين/لوفاستاتين والكولشيسين. إذا كانت تصفية الكرياتينين أقل من 30 مل/دقيقة تخفض الجرعة إلى النصف ولا تتجاوز المدة 14 يوماً.',
+    ci: { pregnancy_alert: true, renal_alert: true, hepatic_alert: true },
+    needs_weight: false,
+    ref: 'RCP Clarithromycine 500 mg — eMC, sections 4.2 à 4.5',
+  }),
+  t('Clarithromycine', 'Infections ORL, respiratoires ou cutanées à germes sensibles chez l’enfant', 'child', {
+    dose_fr: '7,5 mg/kg par prise (suspension buvable)', dose_ar: '7.5 مغ/كغ في الجرعة (معلق فموي)',
+    freq_fr: '2 fois par jour (toutes les 12 heures)', freq_ar: 'مرتين يومياً (كل 12 ساعة)',
+    dur_fr: '5 à 10 jours selon l’infection', dur_ar: 'من 5 إلى 10 أيام حسب العدوى',
+    max_daily: '1 g/j (500 mg maximum par prise)',
+    warn_fr: 'Réservée à la suspension chez l’enfant de 6 mois à 12 ans. Si clairance de la créatinine < 30 mL/min : 7,5 mg/kg une fois par jour, sans dépasser 14 jours. Vérifier les interactions et le QT.',
+    warn_ar: 'يستعمل المعلق للأطفال من 6 أشهر إلى 12 سنة. إذا كانت تصفية الكرياتينين أقل من 30 مل/دقيقة: 7.5 مغ/كغ مرة يومياً دون تجاوز 14 يوماً. التحقق من التداخلات وQT.',
+    ci: { pregnancy_alert: false, renal_alert: true, hepatic_alert: true },
+    min_age: 0.5,
+    max_age: 12,
+    needs_weight: true,
+    ref: 'RCP Clarithromycine 125 mg/5 mL — eMC, sections 4.2 à 4.5',
+  }),
+
   // Azithromycine
   t('Azithromycine', 'Infections respiratoires, Chlamydia, Angine Streptococcique', 'adult', {
     dose_fr: '1 comprimé (500 mg)', dose_ar: 'قرص واحد (500 مغ)',

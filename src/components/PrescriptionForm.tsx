@@ -35,11 +35,12 @@ import {
   Activity
 } from 'lucide-react';
 import { logAudit, normalizeSearchText } from '../data';
-import { 
+import {
   checkMedicineAllergies, 
   checkDrugInteractions, 
   checkTherapeuticOverlaps 
 } from '../interactionsData';
+import { findMatchingDosageTemplates } from '../utils/dosageTemplates';
 
 interface PrescriptionFormProps {
   patient: Patient | null;
@@ -242,9 +243,7 @@ export default function PrescriptionForm({
     setShowResults(false);
 
     // Look for matching dosage templates
-    const templates = dosageTemplates.filter(
-      (t) => t.medicine_id === med.id || (t.dci_name && t.dci_name.toLowerCase() === med.dci_name.toLowerCase())
-    );
+    const templates = findMatchingDosageTemplates(med, dosageTemplates);
 
     if (templates.length > 0) {
       setSelectedTemplateMed(med);
@@ -291,9 +290,7 @@ export default function PrescriptionForm({
     const med = medicines.find((m) => m.id === item.medicine_id);
     if (!med) return;
 
-    const templates = dosageTemplates.filter(
-      (t) => t.medicine_id === med.id || (t.dci_name && t.dci_name.toLowerCase() === med.dci_name.toLowerCase())
-    );
+    const templates = findMatchingDosageTemplates(med, dosageTemplates);
 
     if (templates.length > 0) {
       setSelectedTemplateMed(med);
