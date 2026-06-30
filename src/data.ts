@@ -14,6 +14,9 @@ import {
   DoctorConfig,
 } from './types';
 import pctMedications from './pct_medications.json';
+import generatedTemplates from './dosage_templates.json';
+import { collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { auth, db as dbFirestore } from './firebase';
 
 // Helper to remove French accents
 export function removeAccents(str: string): string {
@@ -555,7 +558,12 @@ export const INITIAL_DOSAGE_TEMPLATES: DosageTemplate[] = [
     source_reference: 'Ordre National des Médecins Tunisie - Vigilance Psychotropes',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  }
+  },
+  // ─── Templates générés automatiquement depuis liste_amm.xlsx ───────────────
+  // Couvre 14 classes thérapeutiques: cardiovasculaire, nerveux, anti-infectieux,
+  // digestif/métabolisme, respiratoire, muscles/squelette, hormones,
+  // sang, ophtalmologie, dermatologie, génito-urinaire, antiparasitaires...
+  ...(generatedTemplates as DosageTemplate[]),
 ];
 
 // Seed some initial audit logs and past prescriptions for demonstration
@@ -630,7 +638,7 @@ export function getDbState(): DbState {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      
+
       // Merge medicines to ensure they have access to the full official Tunisian PCT database
       let medicines = parsed.medicines || INITIAL_MEDICINES;
       if (medicines.length < INITIAL_MEDICINES.length) {
@@ -639,12 +647,14 @@ export function getDbState(): DbState {
         medicines = [...medicines, ...missingMedicines];
       }
 
-      // Merge dosage templates
+      // Merge dosage templates — always use the latest generated set
       let dosageTemplates = parsed.dosageTemplates || INITIAL_DOSAGE_TEMPLATES;
-      if (dosageTemplates.length < INITIAL_DOSAGE_TEMPLATES.length) {
+      {
         const existingIds = new Set(dosageTemplates.map((t: any) => t.id));
         const missingTemplates = INITIAL_DOSAGE_TEMPLATES.filter((t) => !existingIds.has(t.id));
-        dosageTemplates = [...dosageTemplates, ...missingTemplates];
+        if (missingTemplates.length > 0) {
+          dosageTemplates = [...dosageTemplates, ...missingTemplates];
+        }
       }
 
       const mergedState: DbState = {
@@ -685,25 +695,48 @@ export function saveDbState(state: DbState) {
   localStorage.setItem('tun_med_prescription_db', JSON.stringify(state));
 }
 
-// Global state logging function
-export function logAudit(
+let auditDoctorUid: string | null = null;
+
+export function setAuditContext(doctorUid: string | null) {
+  auditDoctorUid = doctorUid;
+}
+
+function serializeAuditValue(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  const serialized = JSON.stringify(value);
+  return serialized.length <= 20000 ? serialized : serialized.slice(0, 20000);
+}
+
+// Append-only remote audit logging. Firestore rules bind actor_id to the
+// authenticated user and reject updates/deletes.
+export async function logAudit(
   action: string,
   entity_type: string,
   entity_id: string,
   before?: any,
   after?: any
 ) {
-  const state = getDbState();
-  const log: AuditLog = {
-    id: 'audit-' + Math.random().toString(36).substr(2, 9),
-    actor_id: 'doctor-current',
+  const currentUser = auth.currentUser;
+  if (!currentUser || !auditDoctorUid) return;
+
+  const auditRef = doc(collection(dbFirestore, 'auditLogs'));
+  const beforeJson = serializeAuditValue(before);
+  const afterJson = serializeAuditValue(after);
+  const log = {
+    id: auditRef.id,
+    actor_id: currentUser.uid,
+    doctor_uid: auditDoctorUid,
     action,
     entity_type,
     entity_id,
-    before_json: before ? JSON.stringify(before) : undefined,
-    after_json: after ? JSON.stringify(after) : undefined,
-    created_at: new Date().toISOString(),
+    ...(beforeJson ? { before_json: beforeJson } : {}),
+    ...(afterJson ? { after_json: afterJson } : {}),
+    created_at: serverTimestamp(),
   };
-  state.auditLogs.unshift(log);
-  saveDbState(state);
+
+  try {
+    await setDoc(auditRef, log);
+  } catch (error) {
+    console.error('Unable to persist audit event:', error);
+  }
 }
