@@ -31,7 +31,8 @@ export interface Medicine {
   therapeutic_class?: string;
   status: MedicineStatus;
   is_available?: boolean;
-  requires_special_prescription?: boolean; // Psychotropes, stupéfiants
+  tableau?: string | null; // DPM: A = Liste I, B = stupéfiant, C = Liste II, O = hors tableaux
+  requires_special_prescription?: boolean; // Ordonnance contrôlée spéciale (Tableau B)
   created_at: string;
   updated_at: string;
 }

@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
+const { requiresSpecialPrescription } = require('./regulatory-classification.cjs');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -48,10 +49,6 @@ function inferRoute(forme) {
   if (f.includes('auriculaire') || f.includes('otique')) return 'Auriculaire';
   if (f.includes('lingual') || f.includes('sublingual')) return 'Sublingual';
   return '';
-}
-
-function requiresSpecialPrescription(tableau) {
-  return tableau === 'A';
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────

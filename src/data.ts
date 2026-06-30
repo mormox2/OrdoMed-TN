@@ -285,7 +285,8 @@ export const INITIAL_MEDICINES: Medicine[] = [
     therapeutic_class: 'Anxiolytique - Benzodiazépine',
     status: 'active',
     is_available: true,
-    requires_special_prescription: true, // Marked as special regulation (Psychotrope)
+    tableau: 'A', // Liste I; ne signifie pas « psychotrope réglementé ».
+    requires_special_prescription: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },

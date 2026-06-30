@@ -61,6 +61,19 @@ function createPrescriptionNumber(): string {
   return `ORD-${year}-${randomPart.toUpperCase()}`;
 }
 
+function isTableBMedicine(medicine?: Medicine): boolean {
+  const tableau = medicine?.tableau?.trim().toUpperCase();
+  if (tableau) return tableau === 'B';
+  return medicine?.requires_special_prescription === true;
+}
+
+function hasOralOrTransdermalForm(medicine?: Medicine): boolean {
+  if (!medicine) return false;
+  const route = medicine.route?.trim().toLowerCase() || '';
+  const form = medicine.pharmaceutical_form.trim().toLowerCase();
+  return route === 'oral' || route === 'orale' || form.includes('transderm') || form.includes('patch');
+}
+
 export default function PrescriptionForm({
   patient,
   medicines,
@@ -459,10 +472,10 @@ export default function PrescriptionForm({
       if (!confirmInteraction) return;
     }
 
-    // Validate psychotropes duration limit of 28 days under Tunisian law
-    const psychotropicItemsWithLongDuration = items.filter(it => {
-      const isPsych = medicines.find((m) => m.id === it.medicine_id)?.requires_special_prescription;
-      if (!isPsych) return false;
+    // Tableau B medicines in oral or transdermal form are limited to 28 days.
+    const controlledItemsWithLongDuration = items.filter(it => {
+      const medicine = medicines.find((m) => m.id === it.medicine_id);
+      if (!isTableBMedicine(medicine) || !hasOralOrTransdermalForm(medicine)) return false;
       
       // Parse duration to check if it exceeds 28 days
       const durationStr = it.duration.toLowerCase();
@@ -476,9 +489,9 @@ export default function PrescriptionForm({
       return false;
     });
 
-    if (psychotropicItemsWithLongDuration.length > 0) {
+    if (controlledItemsWithLongDuration.length > 0) {
       alert(
-        `ERREUR RÉGLEMENTAIRE (LOI TUNISIENNE) :\n\nLe(s) médicament(s) suivant(s) :\n${psychotropicItemsWithLongDuration.map(it => `• ${it.medicine_label} (Durée : ${it.duration})`).join('\n')}\nsont des psychotropes réglementés. La durée maximale de prescription autorisée par la loi en Tunisie est strictement limitée à 28 jours.\n\nVeuillez modifier la durée de traitement avant de pouvoir signer l'ordonnance.`
+        `ERREUR RÉGLEMENTAIRE (LOI TUNISIENNE) :\n\nLe(s) médicament(s) suivant(s) :\n${controlledItemsWithLongDuration.map(it => `• ${it.medicine_label} (Durée : ${it.duration})`).join('\n')}\nsont classés au tableau B (stupéfiants) sous forme orale ou transdermique. La durée maximale de prescription est limitée à 28 jours.\n\nVeuillez modifier la durée de traitement avant de pouvoir signer l'ordonnance.`
       );
       return;
     }
@@ -693,9 +706,9 @@ export default function PrescriptionForm({
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-slate-800 text-sm">{med.name_brand}</span>
                                   <span className="text-xs text-slate-500 font-medium">({med.dosage_strength} {med.pharmaceutical_form})</span>
-                                  {med.requires_special_prescription && (
+                                  {isTableBMedicine(med) && (
                                     <span className="px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-100 rounded text-[9px] font-bold uppercase animate-pulse">
-                                      Psychotrope
+                                      Stupéfiant · Tableau B
                                     </span>
                                   )}
                                 </div>
@@ -758,7 +771,7 @@ export default function PrescriptionForm({
               <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Lignes de prescription :</h3>
 
               {/* Directives de Sécurité Clinique / Clinical Decision Support Panel */}
-              {items.length > 0 && (detectedInteractions.length > 0 || detectedOverlaps.length > 0 || items.some(it => getAllergyAlertForLine(it)) || items.some(it => medicines.find((m) => m.id === it.medicine_id)?.requires_special_prescription)) && (
+              {items.length > 0 && (detectedInteractions.length > 0 || detectedOverlaps.length > 0 || items.some(it => getAllergyAlertForLine(it)) || items.some(it => isTableBMedicine(medicines.find((m) => m.id === it.medicine_id)))) && (
                 <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-4 animate-fadeIn shadow-sm" id="clinical-decision-support-panel">
                   <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
                     <div className="flex items-center gap-2">
@@ -873,19 +886,19 @@ export default function PrescriptionForm({
                         </div>
                       )}
 
-                      {/* Psychotropics Regulatory Block */}
-                      {items.some(item => medicines.find((m) => m.id === item.medicine_id)?.requires_special_prescription) && (
+                      {/* Tableau B regulatory block */}
+                      {items.some(item => isTableBMedicine(medicines.find((m) => m.id === item.medicine_id))) && (
                         <div className="p-3 bg-violet-50/60 border border-violet-100 rounded-xl space-y-2">
                           <div className="flex items-center gap-1.5 text-violet-800 font-bold uppercase text-[10px] tracking-wider">
                             <Scale className="w-4 h-4 text-violet-600 shrink-0 mt-0.5 animate-pulse" />
-                            <span>🟣 Législation Psychotropes (Tableau A)</span>
+                            <span>🟣 Stupéfiants réglementés (Tableau B)</span>
                           </div>
                           <div className="text-[11px] text-violet-950 space-y-1">
-                            <p className="font-semibold">Substance sous surveillance réglementaire tunisienne :</p>
+                            <p className="font-semibold">Substance soumise au régime tunisien des stupéfiants :</p>
                             <ul className="list-disc list-inside text-slate-600 text-[10px] space-y-0.5 pl-1">
-                              <li>Limitation stricte à <strong>28 jours de traitement</strong> par ligne.</li>
+                              <li>Formes orales ou transdermiques : <strong>28 jours maximum</strong>.</li>
                               <li>Écrire obligatoirement les doses et boîtes en toutes lettres.</li>
-                              <li>Le pharmacien exigera l'original sécurisé bilingue.</li>
+                              <li>Respecter les exigences de prescription et de délivrance propres à la substance.</li>
                             </ul>
                           </div>
                         </div>
@@ -900,7 +913,7 @@ export default function PrescriptionForm({
                   {items.map((item, index) => {
                     const isAllergicLine = getAllergyAlertForLine(item);
                     const isSubstanceDuplicate = getDciDuplicateAlert(item.dci_name, item.id);
-                    const isPsychotrope = medicines.find((m) => m.id === item.medicine_id)?.requires_special_prescription;
+                    const isControlledMedicine = isTableBMedicine(medicines.find((m) => m.id === item.medicine_id));
 
                     return (
                       <div 
@@ -922,9 +935,9 @@ export default function PrescriptionForm({
                               </span>
                               <h4 className="text-sm font-bold text-slate-800">{item.medicine_label}</h4>
                               
-                              {isPsychotrope && (
+                              {isControlledMedicine && (
                                 <span className="px-2 py-0.5 bg-rose-100 text-rose-800 border border-rose-200 text-[9px] font-bold rounded uppercase">
-                                  Psychotrope / Réglementé
+                                  Stupéfiant / Tableau B
                                 </span>
                               )}
                             </div>
