@@ -11,3 +11,4 @@ coverage/
 src/pct_medications.json
 src/dosage_templates.json
 src/drug_interactions.json
+.vercel
