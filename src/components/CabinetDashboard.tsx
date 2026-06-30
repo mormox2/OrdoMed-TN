@@ -40,6 +40,7 @@ export default function CabinetDashboard({
 }: CabinetDashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [cnamOnly, setCnamOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'signed' | 'draft'>('all');
 
   // Stats calculation
   const totalPatients = patients.length;
@@ -53,7 +54,8 @@ export default function CabinetDashboard({
     const matchesQuery = p.patient_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          p.prescription_number.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCnam = !cnamOnly || !!p.is_cnam_apci;
-    return matchesQuery && matchesCnam;
+    const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+    return matchesQuery && matchesCnam && matchesStatus;
   });
 
   return (
@@ -90,7 +92,12 @@ export default function CabinetDashboard({
       {/* Stats Cards Grid (Bento style) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Patients box */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+        <button 
+          onClick={() => setStatusFilter('all')}
+          className={`w-full text-left bg-white p-5 rounded-2xl border-2 shadow-sm flex items-center gap-4 hover:shadow-md transition-all cursor-pointer ${
+            statusFilter === 'all' ? 'border-sky-500 bg-sky-50/30' : 'border-slate-100 border-transparent hover:border-slate-200'
+          }`}
+        >
           <div className="p-3.5 bg-sky-50 text-sky-600 rounded-xl">
             <Users className="w-5 h-5" />
           </div>
@@ -98,10 +105,15 @@ export default function CabinetDashboard({
             <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Patients Enregistrés</span>
             <span className="text-2xl font-black text-slate-800 font-mono">{totalPatients}</span>
           </div>
-        </div>
+        </button>
 
         {/* Signed Prescriptions box */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+        <button 
+          onClick={() => setStatusFilter('signed')}
+          className={`w-full text-left bg-white p-5 rounded-2xl border-2 shadow-sm flex items-center gap-4 hover:shadow-md transition-all cursor-pointer ${
+            statusFilter === 'signed' ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100 border-transparent hover:border-slate-200'
+          }`}
+        >
           <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl">
             <CheckCircle2 className="w-5 h-5" />
           </div>
@@ -109,10 +121,15 @@ export default function CabinetDashboard({
             <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ordonnances Signées</span>
             <span className="text-2xl font-black text-slate-800 font-mono">{totalSignedCount}</span>
           </div>
-        </div>
+        </button>
 
         {/* Draft Prescriptions box */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+        <button 
+          onClick={() => setStatusFilter('draft')}
+          className={`w-full text-left bg-white p-5 rounded-2xl border-2 shadow-sm flex items-center gap-4 hover:shadow-md transition-all cursor-pointer ${
+            statusFilter === 'draft' ? 'border-amber-500 bg-amber-50/30' : 'border-slate-100 border-transparent hover:border-slate-200'
+          }`}
+        >
           <div className="p-3.5 bg-amber-50 text-amber-600 rounded-xl">
             <FileEdit className="w-5 h-5" />
           </div>
@@ -120,7 +137,7 @@ export default function CabinetDashboard({
             <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Brouillons actifs</span>
             <span className="text-2xl font-black text-slate-800 font-mono">{totalDraftCount}</span>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Main Recent Activity Section */}
