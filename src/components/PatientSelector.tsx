@@ -504,7 +504,7 @@ export default function PatientSelector({
             )}
           </div>
 
-          {/* Selected Patient Card */}
+          {/* Selected Patient Card or Patient List */}
           {selectedPatient ? (
             <div className="p-4 bg-slate-50/70 rounded-xl border border-slate-100 space-y-3 relative overflow-hidden group">
               {/* Profile Main info */}
@@ -966,9 +966,35 @@ export default function PatientSelector({
               )}
             </div>
           ) : (
-            <div className="p-8 text-center border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center space-y-2">
-              <User className="w-8 h-8 text-slate-300" />
-              <div className="text-xs text-slate-500 font-medium">Sélectionnez un patient existant ou créez un nouveau dossier pour commencer la prescription.</div>
+            <div className="mt-4 flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1">
+              {filteredPatients.length > 0 ? (
+                filteredPatients.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => onSelectPatient(p)}
+                    className="w-full text-left p-3 rounded-xl border border-slate-100 hover:border-sky-200 hover:bg-sky-50 transition-all cursor-pointer group flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="font-bold text-slate-800">
+                        {p.name_last.toUpperCase()} {p.name_first}
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        {p.gender === 'M' ? 'Masculin' : 'Féminin'} • {getAgeString(p.birth_date)}
+                      </div>
+                    </div>
+                    {userRole === 'doctor' && (
+                      <span className="text-[10px] font-bold px-2 py-1 bg-sky-100 text-sky-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        Ouvrir
+                      </span>
+                    )}
+                  </button>
+                ))
+              ) : (
+                <div className="p-8 text-center text-slate-400">
+                  <User className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">Aucun patient trouvé.</p>
+                </div>
+              )}
             </div>
           )}
         </div>
