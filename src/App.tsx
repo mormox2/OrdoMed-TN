@@ -594,13 +594,6 @@ export default function App() {
                 </span>
               </div>
               <button
-                onClick={() => setIsDeleteAccountOpen(true)}
-                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
-                title="Supprimer mon compte • حذف الحساب"
-              >
-                <Trash2 className="w-4.5 h-4.5" />
-              </button>
-              <button
                 onClick={handleLogout}
                 className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
                 title="Se déconnecter"
@@ -713,17 +706,10 @@ export default function App() {
                   {userProfile?.role === 'doctor' ? 'Médecin 🩺' : 'Secrétaire 📋'}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 px-2">
-                <button
-                  onClick={() => { setIsDeleteAccountOpen(true); setMobileMenuOpen(false); }}
-                  className="flex items-center justify-center gap-2 py-2.5 text-xs text-slate-400 hover:text-rose-500 hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer border border-slate-800"
-                >
-                  <Trash2 className="w-4 h-4 text-rose-500" />
-                  <span>Supprimer</span>
-                </button>
+              <div className="px-2">
                 <button
                   onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                  className="flex items-center justify-center gap-2 py-2.5 text-xs text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-slate-800"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 text-xs text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-slate-800"
                 >
                   <LogOut className="w-4 h-4 text-rose-400" />
                   <span>Déconnexion</span>
@@ -839,6 +825,8 @@ export default function App() {
                 onSelectPatient={setSelectedPatient}
                 onPatientsChange={handlePatientsChange}
                 userRole={userProfile?.role || 'doctor'}
+                prescriptions={db.prescriptions}
+                setActiveTab={setActiveTab}
               />
 
               {selectedPatient && userProfile?.role === 'doctor' && (
@@ -874,6 +862,7 @@ export default function App() {
                     const items = db.prescriptionItems.filter((item) => item.prescription_id === p.id);
                     handleOpenPrintPreview(p, items);
                   }}
+                  onNavigateTab={setActiveTab}
                 />
               )}
 
@@ -929,6 +918,7 @@ export default function App() {
             <DoctorConfigForm
               config={db.doctorConfig}
               onSave={handleSaveDoctorConfig}
+              onDeleteAccountClick={() => setIsDeleteAccountOpen(true)}
             />
             
             <SecretaryManager doctorUid={userProfile.uid} />

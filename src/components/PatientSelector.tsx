@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Patient, CurrentMedication, RenalStatus, HepaticStatus, PregnancyStatus } from '../types';
+import { Patient, CurrentMedication, RenalStatus, HepaticStatus, PregnancyStatus, Prescription } from '../types';
 import { 
   User, 
   Plus, 
@@ -25,7 +25,10 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
-  Scale
+  Scale,
+  FileText,
+  History,
+  ArrowRight
 } from 'lucide-react';
 import { logAudit, INITIAL_MEDICINES } from '../data';
 
@@ -131,6 +134,8 @@ interface PatientSelectorProps {
   onSelectPatient: (patient: Patient | null) => void;
   onPatientsChange: (newPatients: Patient[]) => void;
   userRole?: 'doctor' | 'secretary';
+  prescriptions?: Prescription[];
+  setActiveTab?: (tab: string) => void;
 }
 
 export default function PatientSelector({
@@ -139,6 +144,8 @@ export default function PatientSelector({
   onSelectPatient,
   onPatientsChange,
   userRole = 'doctor',
+  prescriptions = [],
+  setActiveTab,
 }: PatientSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -485,59 +492,61 @@ export default function PatientSelector({
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-5" id="patient-selector-widget">
       {/* Search and Selection Row */}
-      <div className="flex items-center gap-2 justify-between">
+      <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-slate-800 tracking-tight flex items-center gap-1.5 uppercase text-slate-500">
           <User className="w-4.5 h-4.5 text-sky-500" />
           Dossier Patient
         </h2>
-        <button
-          onClick={startAddPatient}
-          className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-100 rounded-lg transition-colors cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Nouveau Patient
-        </button>
       </div>
 
       {!isAdding && !isEditing && (
         <div className="space-y-4">
-          {/* Patient Finder */}
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4.5 h-4.5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Rechercher un patient (ex: Trabelsi)..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9.5 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all placeholder:text-slate-400"
-            />
-            {searchTerm && (
-              <div className="absolute left-0 right-0 top-11 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto divide-y divide-slate-50">
-                {filteredPatients.length > 0 ? (
-                  filteredPatients.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        onSelectPatient(p);
-                        setSearchTerm('');
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center justify-between transition-colors cursor-pointer"
-                    >
-                      <div className="font-semibold text-slate-700">
-                        {p.name_last.toUpperCase()} {p.name_first}
-                      </div>
-                      <div className="text-xs text-slate-500 flex items-center gap-2">
-                        <span>{p.gender === 'M' ? 'Homme' : 'Femme'}</span>
-                        <span>•</span>
-                        <span>{getAgeString(p.birth_date)}</span>
-                      </div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-4 py-2 text-xs text-slate-400 text-center">Aucun patient trouvé</div>
-                )}
-              </div>
-            )}
+          {/* Patient Finder & Actions */}
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4.5 h-4.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher un patient (ex: Trabelsi)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9.5 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/10 focus:border-sky-500 transition-all placeholder:text-slate-400"
+              />
+              {searchTerm && (
+                <div className="absolute left-0 right-0 top-11 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto divide-y divide-slate-50">
+                  {filteredPatients.length > 0 ? (
+                    filteredPatients.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => {
+                          onSelectPatient(p);
+                          setSearchTerm('');
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center justify-between transition-colors cursor-pointer"
+                      >
+                        <div className="font-semibold text-slate-700">
+                          {p.name_last.toUpperCase()} {p.name_first}
+                        </div>
+                        <div className="text-xs text-slate-500 flex items-center gap-2">
+                          <span>{p.gender === 'M' ? 'Homme' : 'Femme'}</span>
+                          <span>•</span>
+                          <span>{getAgeString(p.birth_date)}</span>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-xs text-slate-400 text-center">Aucun patient trouvé</div>
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={startAddPatient}
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-xl shadow-sm transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Nouveau Patient
+            </button>
           </div>
 
           {/* Selected Patient Card or Patient List */}
@@ -1007,6 +1016,77 @@ export default function PatientSelector({
                   )}
                 </div>
               )}
+
+              {/* Last activities and quick actions */}
+              <div className="pt-3 border-t border-slate-100 space-y-3">
+                {(() => {
+                  const patientPrescriptions = prescriptions
+                    ? prescriptions
+                        .filter((p) => p.patient_id === selectedPatient.id)
+                        .sort((a, b) => new Date(b.prescription_date).getTime() - new Date(a.prescription_date).getTime())
+                    : [];
+
+                  const lastPrescription = patientPrescriptions[0];
+                  
+                  return (
+                    <>
+                      {/* Activities Display */}
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1.5 text-[11px]">
+                        <div className="font-bold text-slate-500 uppercase tracking-wider text-[9px]">Dernières Activités</div>
+                        {lastPrescription ? (
+                          <div className="space-y-1 text-slate-700 font-medium">
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Dernière consult. :</span>
+                              <span className="font-semibold text-slate-800">{new Date(lastPrescription.prescription_date).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-400">Dernière ordonnance :</span>
+                              <span className="font-semibold text-slate-800 font-mono flex items-center gap-1">
+                                {lastPrescription.prescription_number}
+                                {lastPrescription.status === 'signed' ? (
+                                  <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[8px] font-bold uppercase scale-90 border border-emerald-100">Validée</span>
+                                ) : (
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[8px] font-bold uppercase scale-90 border border-amber-100">Brouillon</span>
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-slate-400 italic">Aucune ordonnance/consultation enregistrée.</div>
+                        )}
+                      </div>
+
+                      {/* Workflow Actions */}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        {userRole === 'doctor' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveTab?.('prescription');
+                            }}
+                            className="flex items-center justify-center gap-1.5 py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            Rédiger ord.
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveTab?.('patients');
+                          }}
+                          className={`flex items-center justify-center gap-1.5 py-2 px-3 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            userRole !== 'doctor' ? 'col-span-2' : ''
+                          }`}
+                        >
+                          <History className="w-3.5 h-3.5 text-slate-400" />
+                          Historique
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           ) : (
             <div className="mt-4 flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1">

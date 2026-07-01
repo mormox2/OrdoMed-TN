@@ -5,14 +5,15 @@
 
 import React, { useState } from 'react';
 import { DoctorConfig } from '../types';
-import { Save, CheckCircle, ShieldAlert, FileText, Settings, Award } from 'lucide-react';
+import { Save, CheckCircle, ShieldAlert, FileText, Settings, Award, Trash2 } from 'lucide-react';
 
 interface DoctorConfigFormProps {
   config: DoctorConfig;
   onSave: (newConfig: DoctorConfig) => void;
+  onDeleteAccountClick?: () => void;
 }
 
-export default function DoctorConfigForm({ config, onSave }: DoctorConfigFormProps) {
+export default function DoctorConfigForm({ config, onSave, onDeleteAccountClick }: DoctorConfigFormProps) {
   const [formData, setFormData] = useState<DoctorConfig>({ ...config });
   const [isSaved, setIsSaved] = useState(false);
 
@@ -369,6 +370,32 @@ export default function DoctorConfigForm({ config, onSave }: DoctorConfigFormPro
           </button>
         </div>
       </form>
+
+      {onDeleteAccountClick && (
+        <div className="mt-6 p-6 bg-rose-50/20 border-t border-rose-100 rounded-b-2xl space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-rose-50 text-rose-600 rounded-xl mt-0.5">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-rose-800">Zone de Danger</h4>
+              <p className="text-xs text-slate-500 mt-1 max-w-xl">
+                Ces actions sont irréversibles. La suppression de votre compte effacera définitivement toutes vos données cliniques, vos dossiers patients et vos ordonnances de notre système.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-start">
+            <button
+              type="button"
+              onClick={onDeleteAccountClick}
+              className="px-4 py-2 bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 font-bold rounded-xl text-xs transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+            >
+              <Trash2 className="w-4 h-4" />
+              Supprimer mon compte praticien
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
