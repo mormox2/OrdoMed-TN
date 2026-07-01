@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../firebase';
 import { Patient, Prescription, PrescriptionItem, DoctorConfig } from '../types';
+import { withoutUndefined } from '../utils/firestoreData';
 
 export interface UserProfile {
   uid: string;
@@ -229,10 +230,11 @@ export async function deleteSecretaryProfile(id: string): Promise<void> {
 export async function savePatientToFirestore(patient: Patient, doctorUid: string): Promise<void> {
   const path = `patients/${patient.id}`;
   try {
-    await setDoc(doc(db, 'patients', patient.id), {
+    const normalizedPatient = withoutUndefined({
       ...patient,
       doctorUid
     });
+    await setDoc(doc(db, 'patients', patient.id), normalizedPatient);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
     throw error;
@@ -247,10 +249,6 @@ export async function deletePatientFromFirestore(patientId: string): Promise<voi
     handleFirestoreError(error, OperationType.DELETE, path);
     throw error;
   }
-}
-
-function withoutUndefined<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
 }
 
 /**
