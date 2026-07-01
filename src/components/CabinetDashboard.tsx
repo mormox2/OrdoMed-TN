@@ -27,7 +27,9 @@ interface CabinetDashboardProps {
   prescriptions: Prescription[];
   prescriptionItems: PrescriptionItem[];
   patients: Patient[];
-  onSelectPatient: (patient: Patient) => void;
+  onOpenDossier?: (patient: Patient) => void;
+  onDraftPrescription?: (patient: Patient) => void;
+  onSelectPatient?: (patient: Patient) => void; // fallback
   onViewPrescription: (prescription: Prescription) => void;
 }
 
@@ -35,6 +37,8 @@ export default function CabinetDashboard({
   prescriptions,
   prescriptionItems,
   patients,
+  onOpenDossier,
+  onDraftPrescription,
   onSelectPatient,
   onViewPrescription,
 }: CabinetDashboardProps) {
@@ -218,7 +222,7 @@ export default function CabinetDashboard({
                         </td>
                         <td className="py-4 px-6 text-right">
                           <button
-                            onClick={() => onSelectPatient(patient)}
+                            onClick={() => onOpenDossier ? onOpenDossier(patient) : onSelectPatient?.(patient)}
                             className="px-2.5 py-1 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 inline-flex"
                           >
                             Ouvrir Dossier
@@ -296,7 +300,7 @@ export default function CabinetDashboard({
                           </button>
                           {patientObj && (
                             <button
-                              onClick={() => onSelectPatient(patientObj)}
+                              onClick={() => onDraftPrescription ? onDraftPrescription(patientObj) : onSelectPatient?.(patientObj)}
                               className="px-2.5 py-1 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1"
                             >
                               Saisir

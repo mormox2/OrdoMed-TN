@@ -862,7 +862,14 @@ export default function App() {
                   prescriptions={db.prescriptions}
                   prescriptionItems={db.prescriptionItems}
                   patients={db.patients}
-                  onSelectPatient={setSelectedPatient}
+                  onOpenDossier={(p) => {
+                    setSelectedPatient(p);
+                    setActiveTab('patients');
+                  }}
+                  onDraftPrescription={(p) => {
+                    setSelectedPatient(p);
+                    setActiveTab('prescription');
+                  }}
                   onViewPrescription={(p) => {
                     const items = db.prescriptionItems.filter((item) => item.prescription_id === p.id);
                     handleOpenPrintPreview(p, items);
