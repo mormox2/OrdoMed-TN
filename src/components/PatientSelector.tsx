@@ -292,14 +292,14 @@ export default function PatientSelector({
     setFormError(null);
     const parsedWeight = weight ? parseFloat(weight) : undefined;
     const clinicalProfile = {
-      renal_status: renalStatus,
+      renal_status: renalStatus === 'unknown' ? undefined : renalStatus,
       egfr: egfr ? parseFloat(egfr) : undefined,
       creatinine: creatinine ? parseFloat(creatinine) : undefined,
-      hepatic_status: hepaticStatus,
+      hepatic_status: hepaticStatus === 'unknown' ? undefined : hepaticStatus,
       child_pugh: childPugh || undefined,
-      pregnancy_status: gender === 'F' ? pregnancyStatus : 'not_pregnant' as PregnancyStatus,
+      pregnancy_status: gender === 'F' && pregnancyStatus !== 'unknown' ? pregnancyStatus : undefined,
       gestational_age_weeks: gender === 'F' && pregnancyStatus === 'pregnant' && gestationalWeeks ? parseFloat(gestationalWeeks) : undefined,
-      is_breastfeeding: gender === 'F' ? isBreastfeeding : false,
+      is_breastfeeding: gender === 'F' && isBreastfeeding ? true : undefined,
     };
 
     if (isAdding) {

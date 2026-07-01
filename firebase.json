@@ -1,6 +1,6 @@
 {
   "firestore": {
-    "database": "(default)",
+    "database": "ai-studio-ordomedtn-93a17686-f027-44cd-9c80-8667280e1fdd",
     "rules": "firestore.rules"
   },
   "emulators": {
