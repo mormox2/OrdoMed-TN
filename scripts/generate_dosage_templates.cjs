@@ -1652,6 +1652,408 @@ const templates = [
     needs_weight: false,
   }),
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 15. EXTENSION PRIORITAIRE — pratique ambulatoire tunisienne
+  // Tous ces modèles restent en statut draft jusqu'à validation clinique locale.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  t('Esoméprazole', 'Reflux gastro-œsophagien et œsophagite', 'adult', {
+    dose_fr: '1 comprimé ou gélule gastro-résistante (20 mg)', dose_ar: 'قرص أو كبسولة مقاومة للمعدة (20 مغ)',
+    freq_fr: '1 fois par jour, 30 minutes avant le repas', freq_ar: 'مرة يومياً، 30 دقيقة قبل الأكل',
+    dur_fr: '4 semaines, à réévaluer (4 à 8 semaines si œsophagite)', dur_ar: '4 أسابيع مع إعادة التقييم (4 إلى 8 أسابيع عند التهاب المريء)',
+    max_daily: '40 mg/j hors indication spécialisée',
+    warn_fr: 'Réévaluer toute utilisation prolongée. Rechercher une carence en magnésium/B12 et le risque infectieux si traitement chronique.',
+    warn_ar: 'إعادة تقييم الاستعمال المطول. مراقبة نقص المغنيسيوم وفيتامين B12 وخطر العدوى عند العلاج المزمن.',
+    needs_weight: false, needs_dx: true,
+    ref: 'RCP Esoméprazole — EMA/eMC, section 4.2',
+  }),
+
+  t('Glimepiride', 'Diabète de type 2 insuffisamment contrôlé par mesures hygiéno-diététiques', 'adult', {
+    dose_fr: '1 comprimé (1 mg) en initiation', dose_ar: 'قرص واحد (1 مغ) كجرعة بداية',
+    freq_fr: '1 fois par jour juste avant ou pendant le premier repas principal', freq_ar: 'مرة يومياً قبل أو أثناء أول وجبة رئيسية',
+    dur_fr: 'Traitement au long cours, titration selon glycémie', dur_ar: 'علاج طويل الأمد، تعدل الجرعة حسب سكر الدم',
+    max_daily: '6 mg/j',
+    warn_fr: 'Risque d’hypoglycémie. Ne pas sauter de repas. Prudence chez le sujet âgé et en insuffisance rénale ou hépatique.',
+    warn_ar: 'خطر هبوط سكر الدم. عدم تفويت الوجبات. الحذر لدى المسنين وعند القصور الكلوي أو الكبدي.',
+    ci: { renal_alert: true, hepatic_alert: true, pregnancy_alert: true },
+    needs_weight: false, needs_dx: true,
+    ref: 'RCP Glimepiride — eMC, section 4.2',
+  }),
+
+  t('Gliclazide', 'Diabète de type 2 — forme à libération modifiée 30 mg', 'adult', {
+    dose_fr: '1 comprimé LP (30 mg) en initiation', dose_ar: 'قرص ممتد المفعول (30 مغ) كجرعة بداية',
+    freq_fr: '1 fois par jour au petit-déjeuner', freq_ar: 'مرة يومياً مع فطور الصباح',
+    dur_fr: 'Traitement au long cours, titration progressive', dur_ar: 'علاج طويل الأمد مع زيادة تدريجية',
+    max_daily: '120 mg/j pour la forme LP',
+    warn_fr: 'Valable uniquement pour la forme LP 30 mg. Risque d’hypoglycémie; avaler entier et ne pas sauter le repas.',
+    warn_ar: 'خاص فقط بالشكل ممتد المفعول 30 مغ. خطر هبوط السكر؛ يبلع كاملاً ولا تفوت الوجبة.',
+    ci: { renal_alert: true, hepatic_alert: true, pregnancy_alert: true },
+    needs_weight: false, needs_dx: true,
+    ref: 'RCP Gliclazide LP 30 mg — eMC, section 4.2',
+  }),
+
+  t('Sitagliptine', 'Diabète de type 2', 'adult', {
+    dose_fr: '1 comprimé (100 mg)', dose_ar: 'قرص واحد (100 مغ)',
+    freq_fr: '1 fois par jour, avec ou sans repas', freq_ar: 'مرة يومياً مع أو بدون طعام',
+    dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد',
+    max_daily: '100 mg/j',
+    warn_fr: 'Adapter à la fonction rénale (50 mg/j ou 25 mg/j selon DFG). Suspendre et évaluer si suspicion de pancréatite.',
+    warn_ar: 'تعديل الجرعة حسب وظائف الكلى (50 أو 25 مغ/يوم). يوقف ويقيّم عند الاشتباه في التهاب البنكرياس.',
+    ci: { renal_alert: true, pregnancy_alert: true },
+    needs_weight: false, needs_dx: true,
+    ref: 'RCP Sitagliptine — EMA, section 4.2',
+  }),
+
+  t('Acarbose', 'Diabète de type 2 avec hyperglycémie post-prandiale', 'adult', {
+    dose_fr: '1 comprimé (50 mg) en initiation', dose_ar: 'قرص واحد (50 مغ) كجرعة بداية',
+    freq_fr: '3 fois par jour avec la première bouchée de chaque repas', freq_ar: '3 مرات يومياً مع أول لقمة من كل وجبة',
+    dur_fr: 'Traitement au long cours, augmentation progressive', dur_ar: 'علاج طويل الأمد مع زيادة تدريجية',
+    max_daily: '300 mg/j',
+    warn_fr: 'Augmenter progressivement pour limiter flatulences et diarrhée. Une hypoglycémie associée doit être corrigée par glucose, pas saccharose.',
+    warn_ar: 'زيادة الجرعة تدريجياً لتقليل الغازات والإسهال. يعالج هبوط السكر بالغلوكوز وليس السكروز.',
+    ci: { renal_alert: true, hepatic_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Acarbose — eMC, section 4.2',
+  }),
+
+  t('Rosuvastatine', 'Hypercholestérolémie et prévention cardiovasculaire', 'adult', {
+    dose_fr: '1 comprimé (5 à 10 mg) en initiation', dose_ar: 'قرص واحد (5 إلى 10 مغ) كجرعة بداية',
+    freq_fr: '1 fois par jour, à heure fixe', freq_ar: 'مرة يومياً في وقت ثابت',
+    dur_fr: 'Traitement au long cours avec contrôle lipidique', dur_ar: 'علاج طويل الأمد مع مراقبة الدهون',
+    max_daily: '40 mg/j uniquement sous surveillance spécialisée',
+    warn_fr: 'Contrôler transaminases; signaler douleurs ou faiblesse musculaire. Adapter en insuffisance rénale et éviter pendant grossesse/allaitement.',
+    warn_ar: 'مراقبة إنزيمات الكبد والإبلاغ عن ألم أو ضعف عضلي. تعديلها في القصور الكلوي وتجنبها أثناء الحمل والرضاعة.',
+    ci: { pregnancy_alert: true, renal_alert: true, hepatic_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Rosuvastatine — EMA/eMC, section 4.2',
+  }),
+
+  t('Irbésartan', 'Hypertension artérielle', 'adult', {
+    dose_fr: '1 comprimé (150 mg)', dose_ar: 'قرص واحد (150 مغ)', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً',
+    dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد', max_daily: '300 mg/j',
+    warn_fr: 'Contrôler pression artérielle, créatinine et kaliémie. Contre-indiqué pendant la grossesse.',
+    warn_ar: 'مراقبة الضغط والكرياتينين والبوتاسيوم. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Irbésartan — EMA, section 4.2',
+  }),
+
+  t('Valsartan', 'Hypertension artérielle', 'adult', {
+    dose_fr: '1 comprimé (80 mg)', dose_ar: 'قرص واحد (80 مغ)', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً',
+    dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد', max_daily: '320 mg/j pour l’HTA',
+    warn_fr: 'Contrôler pression artérielle, créatinine et kaliémie. Contre-indiqué pendant la grossesse.',
+    warn_ar: 'مراقبة الضغط والكرياتينين والبوتاسيوم. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Valsartan — EMA, section 4.2',
+  }),
+
+  t('Captopril', 'Hypertension artérielle', 'adult', {
+    dose_fr: '1 comprimé (25 mg) en initiation', dose_ar: 'قرص واحد (25 مغ) كجرعة بداية',
+    freq_fr: '2 fois par jour, 1 heure avant les repas', freq_ar: 'مرتين يومياً، ساعة قبل الطعام',
+    dur_fr: 'Traitement au long cours, titration selon réponse', dur_ar: 'علاج طويل الأمد وتعديل حسب الاستجابة', max_daily: '150 mg/j',
+    warn_fr: 'Contrôler créatinine et kaliémie. Risque de toux et d’angiœdème. Contre-indiqué pendant la grossesse.',
+    warn_ar: 'مراقبة الكرياتينين والبوتاسيوم. خطر السعال والوذمة الوعائية. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Captopril — eMC, section 4.2',
+  }),
+
+  t('Candésartan cilexétil', 'Hypertension artérielle', 'adult', {
+    dose_fr: '1 comprimé (8 mg)', dose_ar: 'قرص واحد (8 مغ)', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً',
+    dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد', max_daily: '32 mg/j',
+    warn_fr: 'Contrôler pression artérielle, créatinine et kaliémie. Contre-indiqué pendant la grossesse.',
+    warn_ar: 'مراقبة الضغط والكرياتينين والبوتاسيوم. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Candésartan cilexétil — EMA/eMC, section 4.2',
+  }),
+
+  t('Spironolactone', 'Insuffisance cardiaque avec fraction d’éjection réduite ou œdèmes', 'adult', {
+    dose_fr: '1 comprimé (25 mg)', dose_ar: 'قرص واحد (25 مغ)', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً',
+    dur_fr: 'Traitement au long cours sous surveillance biologique', dur_ar: 'علاج طويل الأمد مع مراقبة التحاليل', max_daily: '50 mg/j dans l’insuffisance cardiaque',
+    warn_fr: 'Contrôler kaliémie et fonction rénale avant traitement, après 1 semaine puis régulièrement. Risque d’hyperkaliémie.',
+    warn_ar: 'مراقبة البوتاسيوم ووظائف الكلى قبل العلاج وبعد أسبوع ثم دورياً. خطر ارتفاع البوتاسيوم.',
+    ci: { renal_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Spironolactone — eMC, section 4.2',
+  }),
+
+  t('Indapamide', 'Hypertension artérielle — forme LP 1,5 mg', 'adult', {
+    dose_fr: '1 comprimé LP (1,5 mg)', dose_ar: 'قرص ممتد المفعول (1.5 مغ)', freq_fr: '1 fois par jour le matin', freq_ar: 'مرة يومياً صباحاً',
+    dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد', max_daily: '1,5 mg/j pour la forme LP',
+    warn_fr: 'Valable pour la forme LP. Contrôler sodium, potassium, fonction rénale et uricémie.',
+    warn_ar: 'خاص بالشكل ممتد المفعول. مراقبة الصوديوم والبوتاسيوم ووظائف الكلى وحمض اليوريك.',
+    ci: { renal_alert: true, hepatic_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Indapamide LP — eMC, section 4.2',
+  }),
+
+  t('Famotidine', 'Reflux gastro-œsophagien ou ulcère gastro-duodénal', 'adult', {
+    dose_fr: '1 comprimé (20 mg)', dose_ar: 'قرص واحد (20 مغ)', freq_fr: '2 fois par jour', freq_ar: 'مرتين يومياً',
+    dur_fr: '4 à 8 semaines selon indication', dur_ar: '4 إلى 8 أسابيع حسب الحالة', max_daily: '40 mg/j en usage courant',
+    warn_fr: 'Réduire la dose ou espacer les prises en insuffisance rénale.', warn_ar: 'تخفيض الجرعة أو تباعدها عند القصور الكلوي.',
+    ci: { renal_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Famotidine — eMC, section 4.2',
+  }),
+
+  t('Desloratadine', 'Rhinite allergique et urticaire', 'adult', {
+    dose_fr: '1 comprimé (5 mg)', dose_ar: 'قرص واحد (5 مغ)', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً',
+    dur_fr: 'Selon durée des symptômes, à réévaluer', dur_ar: 'حسب مدة الأعراض مع إعادة التقييم', max_daily: '5 mg/j',
+    warn_fr: 'Prudence en insuffisance rénale sévère. Une somnolence reste possible.', warn_ar: 'الحذر في القصور الكلوي الشديد. قد يحدث النعاس.',
+    ci: { renal_alert: true }, needs_weight: false,
+    ref: 'RCP Desloratadine — EMA, section 4.2',
+  }),
+
+  t('Lévocétirizine', 'Rhinite allergique et urticaire', 'adult', {
+    dose_fr: '1 comprimé (5 mg)', dose_ar: 'قرص واحد (5 مغ)', freq_fr: '1 fois par jour le soir', freq_ar: 'مرة يومياً مساءً',
+    dur_fr: 'Selon durée des symptômes, à réévaluer', dur_ar: 'حسب مدة الأعراض مع إعادة التقييم', max_daily: '5 mg/j',
+    warn_fr: 'Adapter à la fonction rénale. Risque de somnolence; éviter alcool et conduite si affecté.', warn_ar: 'تعديلها حسب وظائف الكلى. خطر النعاس؛ تجنب الكحول والقيادة عند التأثر.',
+    ci: { renal_alert: true }, needs_weight: false,
+    ref: 'RCP Lévocétirizine — EMA/eMC, section 4.2',
+  }),
+
+  t('Budésonide', 'Asthme persistant — poudre ou aérosol inhalé', 'adult', {
+    dose_fr: '200 à 400 microgrammes par inhalation selon le dispositif', dose_ar: '200 إلى 400 ميكروغرام بالاستنشاق حسب الجهاز',
+    freq_fr: '2 fois par jour', freq_ar: 'مرتين يومياً', dur_fr: 'Traitement de fond continu, palier à réévaluer', dur_ar: 'علاج وقائي مستمر مع إعادة تقييم المرحلة',
+    warn_fr: 'La dose dépend du dispositif. Rincer la bouche après chaque prise. Ne traite pas la crise aiguë.', warn_ar: 'تعتمد الجرعة على الجهاز. مضمضة الفم بعد كل جرعة. لا يعالج النوبة الحادة.',
+    needs_weight: false, needs_dx: true,
+    ref: 'RCP Budésonide inhalé — EMA/eMC, section 4.2',
+  }),
+
+  t('Fluticasone', 'Rhinite allergique — spray nasal 50 microgrammes/dose', 'adult', {
+    dose_fr: '2 pulvérisations dans chaque narine', dose_ar: 'بختان في كل فتحة أنف', freq_fr: '1 fois par jour, puis réduire à la dose minimale efficace', freq_ar: 'مرة يومياً ثم التخفيض لأقل جرعة فعالة',
+    dur_fr: 'Pendant la période symptomatique', dur_ar: 'خلال فترة الأعراض', max_daily: '200 microgrammes/j pour le spray 50 microgrammes/dose',
+    warn_fr: 'Vérifier la présentation et la concentration. Orienter le jet à l’opposé de la cloison nasale.', warn_ar: 'التحقق من الشكل والتركيز. توجيه الرش بعيداً عن الحاجز الأنفي.',
+    needs_weight: false,
+    ref: 'RCP Fluticasone nasale — eMC, section 4.2',
+  }),
+
+  t('Mométasone', 'Rhinite allergique — spray nasal 50 microgrammes/dose', 'adult', {
+    dose_fr: '2 pulvérisations dans chaque narine', dose_ar: 'بختان في كل فتحة أنف', freq_fr: '1 fois par jour, puis réduire à la dose minimale efficace', freq_ar: 'مرة يومياً ثم التخفيض لأقل جرعة فعالة',
+    dur_fr: 'Pendant la période symptomatique', dur_ar: 'خلال فترة الأعراض', max_daily: '200 microgrammes/j',
+    warn_fr: 'Vérifier la concentration. Orienter le jet à l’opposé de la cloison; surveiller épistaxis et irritation.', warn_ar: 'التحقق من التركيز. توجيه الرش بعيداً عن الحاجز ومراقبة الرعاف والتهيج.',
+    needs_weight: false,
+    ref: 'RCP Mométasone nasale — EMA/eMC, section 4.2',
+  }),
+
+  t('Acide fusidique', 'Infection cutanée bactérienne localisée sensible', 'adult', {
+    dose_fr: 'Appliquer une fine couche sur la zone atteinte', dose_ar: 'وضع طبقة رقيقة على المنطقة المصابة', freq_fr: '2 à 3 fois par jour', freq_ar: 'مرتين إلى 3 مرات يومياً',
+    dur_fr: '5 à 7 jours, réévaluation si absence d’amélioration', dur_ar: '5 إلى 7 أيام مع إعادة التقييم إذا لم يحدث تحسن',
+    warn_fr: 'Réserver aux infections localisées documentées ou très probables. Éviter les traitements prolongés pour limiter la résistance.', warn_ar: 'يقتصر على العدوى الموضعية المؤكدة أو المرجحة. تجنب العلاج المطول للحد من المقاومة.',
+    needs_weight: false, needs_dx: true,
+    ref: 'RCP Acide fusidique topique — eMC, sections 4.1–4.2',
+  }),
+
+  t('Terbinafine', 'Dermatophytie cutanée étendue nécessitant une voie orale', 'adult', {
+    dose_fr: '1 comprimé (250 mg)', dose_ar: 'قرص واحد (250 مغ)', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً',
+    dur_fr: '2 à 4 semaines selon localisation; onychomycose: protocole distinct', dur_ar: '2 إلى 4 أسابيع حسب الموضع؛ فطريات الأظافر لها بروتوكول منفصل', max_daily: '250 mg/j',
+    warn_fr: 'Confirmer l’indication mycologique. Contrôler la fonction hépatique avant traitement; arrêter si signes d’atteinte hépatique.', warn_ar: 'تأكيد التشخيص الفطري. فحص وظائف الكبد قبل العلاج وإيقافه عند علامات أذية كبدية.',
+    ci: { hepatic_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Terbinafine 250 mg — eMC, section 4.2',
+  }),
+
+  t('Éconazole nitrate', 'Mycose cutanée superficielle', 'adult', {
+    dose_fr: 'Appliquer une fine couche sur peau propre et sèche', dose_ar: 'وضع طبقة رقيقة على جلد نظيف وجاف', freq_fr: '2 fois par jour', freq_ar: 'مرتين يومياً',
+    dur_fr: '2 à 4 semaines selon localisation', dur_ar: '2 إلى 4 أسابيع حسب الموضع',
+    warn_fr: 'Poursuivre quelques jours après disparition clinique selon le RCP. Réévaluer si échec ou irritation importante.', warn_ar: 'الاستمرار بضعة أيام بعد زوال الأعراض حسب النشرة. إعادة التقييم عند الفشل أو التهيج الشديد.',
+    needs_weight: false, needs_dx: true,
+    ref: 'RCP Éconazole topique — eMC, section 4.2',
+  }),
+
+  t('Célécoxib', 'Douleur arthrosique chez l’adulte sans contre-indication cardiovasculaire', 'adult', {
+    dose_fr: '1 gélule (100 mg)', dose_ar: 'كبسولة واحدة (100 مغ)', freq_fr: '2 fois par jour, ou 200 mg une fois par jour', freq_ar: 'مرتين يومياً، أو 200 مغ مرة واحدة يومياً',
+    dur_fr: 'Durée la plus courte possible, réévaluation rapide', dur_ar: 'أقصر مدة ممكنة مع إعادة تقييم سريعة', max_daily: '400 mg/j',
+    warn_fr: 'Utiliser la dose minimale efficace. Risques cardiovasculaire, digestif et rénal; éviter avec un autre AINS et pendant la grossesse.', warn_ar: 'استعمال أقل جرعة فعالة. مخاطر قلبية وهضمية وكلوية؛ تجنب مشاركته مع مضاد التهاب آخر وأثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true, hepatic_alert: true }, needs_weight: false, needs_dx: true,
+    ref: 'RCP Célécoxib — EMA/eMC, section 4.2',
+  }),
+
+  t('Trimebutine', 'Troubles fonctionnels intestinaux symptomatiques', 'adult', {
+    dose_fr: '1 comprimé (100 à 200 mg selon présentation)', dose_ar: 'قرص واحد (100 إلى 200 مغ حسب الشكل)', freq_fr: '3 fois par jour avant les repas', freq_ar: '3 مرات يومياً قبل الوجبات',
+    dur_fr: 'Traitement court, à réévaluer', dur_ar: 'علاج قصير مع إعادة التقييم', max_daily: '600 mg/j',
+    warn_fr: 'Traitement symptomatique uniquement. Rechercher un signe d’alarme digestif avant renouvellement.', warn_ar: 'علاج للأعراض فقط. البحث عن علامات إنذار هضمية قبل التجديد.',
+    needs_weight: false, needs_dx: true,
+    ref: 'RCP Trimébutine — section 4.2',
+  }),
+
+  t('Polyéthylène glycol', 'Constipation fonctionnelle', 'adult', {
+    dose_fr: '1 sachet (en général 10 à 17 g selon présentation)', dose_ar: 'كيس واحد (عادة 10 إلى 17 غ حسب الشكل)', freq_fr: '1 fois par jour, à ajuster selon réponse', freq_ar: 'مرة يومياً وتعدل حسب الاستجابة',
+    dur_fr: 'Quelques jours à quelques semaines avec réévaluation', dur_ar: 'عدة أيام إلى أسابيع مع إعادة التقييم',
+    warn_fr: 'Vérifier le dosage du sachet et maintenir une hydratation suffisante. Écarter une occlusion en cas de douleur ou vomissements.', warn_ar: 'التحقق من جرعة الكيس والحفاظ على الترطيب. استبعاد الانسداد عند الألم أو القيء.',
+    needs_weight: false,
+    ref: 'RCP Macrogol/Polyéthylène glycol — eMC, section 4.2',
+  }),
+
+  // Anti-infectieux prioritaires — indication et durée toujours à confirmer.
+  t('Céfuroxime', 'Infection ORL ou respiratoire documentée/suspectée sensible — forme axétil orale', 'adult', {
+    dose_fr: '1 comprimé (250 mg; 500 mg si infection sévère selon RCP)', dose_ar: 'قرص واحد (250 مغ؛ 500 مغ في العدوى الشديدة حسب النشرة)',
+    freq_fr: '2 fois par jour après les repas', freq_ar: 'مرتين يومياً بعد الطعام', dur_fr: '5 à 10 jours selon foyer et recommandations', dur_ar: '5 إلى 10 أيام حسب موضع العدوى والتوصيات',
+    max_daily: '1 g/j', warn_fr: 'Vérifier allergie aux bêta-lactamines, indication, fonction rénale et écologie locale. Ne concerne pas la forme injectable.', warn_ar: 'التحقق من حساسية البيتا لاكتام والاستطباب ووظائف الكلى والمقاومة المحلية. لا يخص الشكل الحقني.',
+    ci: { renal_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Céfuroxime axétil — eMC, section 4.2',
+  }),
+
+  t('Céfixime', 'Infection bactérienne à germe sensible lorsque la céfixime est indiquée', 'adult', {
+    dose_fr: '400 mg par jour', dose_ar: '400 مغ يومياً', freq_fr: '1 fois par jour ou 200 mg toutes les 12 heures', freq_ar: 'مرة يومياً أو 200 مغ كل 12 ساعة',
+    dur_fr: 'Selon foyer et recommandations locales', dur_ar: 'حسب موضع العدوى والتوصيات المحلية', max_daily: '400 mg/j',
+    warn_fr: 'Confirmer l’indication; adapter à la fonction rénale. Vérifier allergie aux céphalosporines/pénicillines et risque de colite à C. difficile.', warn_ar: 'تأكيد الاستطباب وتعديل الجرعة حسب الكلى. التحقق من الحساسية وخطر التهاب القولون بالمطثية العسيرة.',
+    ci: { renal_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Céfixime — eMC, section 4.2',
+  }),
+
+  t('Céfadroxil', 'Infection cutanée, ORL ou urinaire à germe sensible', 'adult', {
+    dose_fr: '1 g par jour', dose_ar: '1 غ يومياً', freq_fr: '1 fois par jour ou 500 mg toutes les 12 heures', freq_ar: 'مرة يومياً أو 500 مغ كل 12 ساعة',
+    dur_fr: 'Selon foyer; au moins 10 jours si infection à streptocoque A', dur_ar: 'حسب موضع العدوى؛ 10 أيام على الأقل عند العقديات A', max_daily: '2 g/j selon indication',
+    warn_fr: 'Adapter à la fonction rénale. Vérifier allergie aux bêta-lactamines et documentation microbiologique.', warn_ar: 'تعديل الجرعة حسب الكلى والتحقق من حساسية البيتا لاكتام والزرع الجرثومي.',
+    ci: { renal_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Céfadroxil — eMC, section 4.2',
+  }),
+
+  t('Cefpodoxime', 'Infection ORL ou respiratoire à germe sensible — forme orale', 'adult', {
+    dose_fr: '1 comprimé (100 à 200 mg selon indication)', dose_ar: 'قرص واحد (100 إلى 200 مغ حسب الاستطباب)', freq_fr: '2 fois par jour au cours des repas', freq_ar: 'مرتين يومياً أثناء الطعام',
+    dur_fr: '5 à 10 jours selon foyer', dur_ar: '5 إلى 10 أيام حسب موضع العدوى', max_daily: '400 mg/j en usage courant',
+    warn_fr: 'Confirmer indication et sensibilité; adapter à la fonction rénale. Vérifier allergie aux bêta-lactamines.', warn_ar: 'تأكيد الاستطباب والحساسية وتعديل الجرعة حسب الكلى والتحقق من حساسية البيتا لاكتام.',
+    ci: { renal_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Cefpodoxime proxétil — eMC, section 4.2',
+  }),
+
+  t('Cotrimoxazole', 'Infection à germe sensible justifiant triméthoprime-sulfaméthoxazole', 'adult', {
+    dose_fr: '1 comprimé forte dose (160 mg/800 mg)', dose_ar: 'قرص قوي واحد (160 مغ/800 مغ)', freq_fr: '2 fois par jour après les repas', freq_ar: 'مرتين يومياً بعد الطعام',
+    dur_fr: 'Selon indication et documentation microbiologique', dur_ar: 'حسب الاستطباب والزرع الجرثومي',
+    warn_fr: 'Adapter à la fonction rénale. Risques d’hyperkaliémie, cytopénie et réaction cutanée grave; interactions avec AVK, méthotrexate et IEC/ARA2.', warn_ar: 'تعديلها حسب الكلى. خطر ارتفاع البوتاسيوم ونقص خلايا الدم وتفاعلات جلدية خطيرة؛ تداخلات مع مضادات التخثر والميثوتركسات وأدوية الضغط.',
+    ci: { renal_alert: true, hepatic_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Cotrimoxazole — eMC, sections 4.2–4.5',
+  }),
+
+  t('Valaciclovir', 'Zona chez l’adulte immunocompétent', 'adult', {
+    dose_fr: '1 g', dose_ar: '1 غ', freq_fr: '3 fois par jour', freq_ar: '3 مرات يومياً', dur_fr: '7 jours, débuter le plus tôt possible', dur_ar: '7 أيام، يبدأ بأسرع وقت ممكن', max_daily: '3 g/j',
+    warn_fr: 'Hydratation suffisante et adaptation rénale obligatoire. Les schémas herpès génital/labial sont différents.', warn_ar: 'ترطيب كافٍ وتعديل إلزامي حسب الكلى. نظم الهربس التناسلي أو الشفوي مختلفة.',
+    ci: { renal_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Valaciclovir — eMC, section 4.2',
+  }),
+
+  t('Spiramycine', 'Infection à germe sensible lorsque la spiramycine est recommandée', 'adult', {
+    dose_fr: '3 millions UI', dose_ar: '3 ملايين وحدة دولية', freq_fr: '2 à 3 fois par jour', freq_ar: 'مرتين إلى 3 مرات يومياً', dur_fr: 'Selon foyer et recommandations', dur_ar: 'حسب موضع العدوى والتوصيات',
+    warn_fr: 'Ne pas appliquer ce modèle à la toxoplasmose gravidique, qui relève d’un protocole spécialisé. Vérifier QT et interactions.', warn_ar: 'لا يطبق هذا النموذج على داء المقوسات أثناء الحمل فهو يتطلب بروتوكولاً متخصصاً. التحقق من QT والتداخلات.',
+    ci: { hepatic_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Spiramycine — section 4.2',
+  }),
+
+  t('Lévofloxacine', 'Infection bactérienne documentée lorsque les alternatives usuelles sont inappropriées', 'adult', {
+    dose_fr: '1 comprimé (500 mg)', dose_ar: 'قرص واحد (500 مغ)', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً', dur_fr: 'Selon foyer, antibiogramme et recommandations', dur_ar: 'حسب موضع العدوى والمضاد الحيوي والتوصيات', max_daily: '500 mg/j en usage courant',
+    warn_fr: 'Réserver aux indications justifiées. Adapter à la fonction rénale. Arrêter si douleur tendineuse, neuropathie ou effet neuropsychiatrique; risques QT et anévrisme.', warn_ar: 'يقتصر على الاستطبابات المبررة ويعدل حسب الكلى. يوقف عند ألم الأوتار أو الاعتلال العصبي أو أعراض نفسية؛ مخاطر QT وتمدد الأوعية.',
+    ci: { renal_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Lévofloxacine — EMA/eMC, sections 4.2–4.4',
+  }),
+
+  t('Oseltamivir', 'Traitement d’une grippe suspectée ou confirmée, début idéalement dans les 48 heures', 'adult', {
+    dose_fr: '1 gélule (75 mg)', dose_ar: 'كبسولة واحدة (75 مغ)', freq_fr: '2 fois par jour', freq_ar: 'مرتين يومياً', dur_fr: '5 jours', dur_ar: '5 أيام', max_daily: '150 mg/j',
+    warn_fr: 'Adapter à la fonction rénale. Le bénéfice dépend du délai, du terrain et de la circulation virale; surveiller effets neuropsychiatriques rares.', warn_ar: 'تعديل الجرعة حسب الكلى. تعتمد الفائدة على سرعة البدء وحالة المريض وانتشار الفيروس؛ مراقبة آثار نفسية عصبية نادرة.',
+    ci: { renal_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Oseltamivir — EMA, section 4.2',
+  }),
+
+  // Haut risque — indication explicite, titration et surveillance obligatoires.
+  t('Prégabaline', 'Douleur neuropathique périphérique ou centrale', 'adult', {
+    dose_fr: '75 mg', dose_ar: '75 مغ', freq_fr: '2 fois par jour en initiation', freq_ar: 'مرتين يومياً كجرعة بداية',
+    dur_fr: 'Réévaluation précoce; arrêt progressif sur au moins 1 semaine', dur_ar: 'إعادة تقييم مبكرة؛ الإيقاف تدريجياً خلال أسبوع على الأقل', max_daily: '600 mg/j uniquement après titration',
+    warn_fr: 'Adapter strictement à la clairance rénale. Risques de somnolence, chutes, œdèmes, dépendance et dépression respiratoire avec opioïdes.', warn_ar: 'تعديل صارم حسب تصفية الكلى. مخاطر النعاس والسقوط والوذمة والاعتماد وتثبيط التنفس مع الأفيونات.',
+    ci: { renal_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Prégabaline — EMA, sections 4.2–4.4',
+  }),
+
+  t('Escitalopram', 'Épisode dépressif majeur chez l’adulte', 'adult', {
+    dose_fr: '1 comprimé (10 mg)', dose_ar: 'قرص واحد (10 مغ)', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً',
+    dur_fr: 'Réévaluation à 2–4 semaines; poursuivre au moins 6 mois après rémission selon situation', dur_ar: 'إعادة التقييم بعد 2–4 أسابيع والاستمرار 6 أشهر على الأقل بعد التحسن حسب الحالة', max_daily: '20 mg/j',
+    warn_fr: 'Surveiller risque suicidaire initial, syndrome sérotoninergique, hyponatrémie et QT. Arrêt progressif; dose réduite chez le sujet âgé ou insuffisant hépatique.', warn_ar: 'مراقبة خطر الانتحار في البداية ومتلازمة السيروتونين ونقص الصوديوم وQT. الإيقاف تدريجي وخفض الجرعة للمسن أو القصور الكبدي.',
+    ci: { hepatic_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Escitalopram — EMA/eMC, sections 4.2–4.4',
+  }),
+
+  t('Olanzapine', 'Schizophrénie — initiation adulte', 'adult', {
+    dose_fr: '5 à 10 mg', dose_ar: '5 إلى 10 مغ', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً',
+    dur_fr: 'Selon évaluation psychiatrique spécialisée', dur_ar: 'حسب تقييم اختصاصي الطب النفسي', max_daily: '20 mg/j',
+    warn_fr: 'Prescription psychiatrique avec surveillance poids/IMC, glycémie, lipides, tension et symptômes extrapyramidaux. Prudence sédation et QT.', warn_ar: 'وصفة نفسية مع مراقبة الوزن والسكر والدهون والضغط والأعراض خارج الهرمية. الحذر من النعاس وQT.',
+    ci: { hepatic_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Olanzapine — EMA, sections 4.2–4.4',
+  }),
+
+  t('Risperidone', 'Schizophrénie — initiation adulte', 'adult', {
+    dose_fr: '2 mg le premier jour, puis titration individualisée', dose_ar: '2 مغ في اليوم الأول ثم زيادة فردية', freq_fr: '1 à 2 prises par jour selon tolérance', freq_ar: 'مرة إلى مرتين يومياً حسب التحمل',
+    dur_fr: 'Selon évaluation psychiatrique spécialisée', dur_ar: 'حسب تقييم اختصاصي الطب النفسي', max_daily: '6 mg/j en pratique courante sans justification spécialisée',
+    warn_fr: 'Surveiller prolactine, poids, métabolisme, hypotension, symptômes extrapyramidaux et QT. Réduire en insuffisance rénale/hépatique.', warn_ar: 'مراقبة البرولاكتين والوزن والاستقلاب والضغط والأعراض خارج الهرمية وQT. تخفيض الجرعة في القصور الكلوي أو الكبدي.',
+    ci: { renal_alert: true, hepatic_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Rispéridone — EMA, sections 4.2–4.4',
+  }),
+
+  t('Quétiapine', 'Schizophrénie — comprimé à libération immédiate, titration initiale', 'adult', {
+    dose_fr: 'J1: 50 mg; J2: 100 mg; J3: 200 mg; J4: 300 mg', dose_ar: 'اليوم 1: 50 مغ؛ اليوم 2: 100 مغ؛ اليوم 3: 200 مغ؛ اليوم 4: 300 مغ',
+    freq_fr: 'Dose quotidienne répartie en 2 prises; ajuster ensuite', freq_ar: 'تقسم الجرعة اليومية على مرتين ثم تعدل',
+    dur_fr: 'Selon évaluation psychiatrique; ne pas transposer à la forme LP', dur_ar: 'حسب التقييم النفسي؛ لا يطبق على الشكل ممتد المفعول', max_daily: '750 mg/j pour cette indication selon RCP',
+    warn_fr: 'Schéma réservé à la forme immédiate et à la schizophrénie. Surveiller sédation, hypotension, poids, glycémie, lipides et QT.', warn_ar: 'خاص بالشكل الفوري والفصام. مراقبة النعاس والضغط والوزن والسكر والدهون وQT.',
+    ci: { hepatic_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Quétiapine libération immédiate — EMA/eMC, section 4.2',
+  }),
+
+  t('Lamotrigine', 'Épilepsie — rappel de titration sécurisée', 'adult', {
+    dose_fr: 'Titration obligatoire selon association au valproate ou aux inducteurs enzymatiques', dose_ar: 'زيادة تدريجية إلزامية حسب المشاركة مع الفالبروات أو محفزات الإنزيمات',
+    freq_fr: 'Ne pas appliquer de dose fixe sans vérifier les co-traitements', freq_ar: 'لا تطبق جرعة ثابتة قبل التحقق من الأدوية المصاحبة',
+    dur_fr: 'Traitement spécialisé au long cours', dur_ar: 'علاج تخصصي طويل الأمد',
+    warn_fr: 'RISQUE DE RASH GRAVE/Stevens-Johnson si titration trop rapide. Vérifier impérativement valproate, inducteurs enzymatiques et reprise après interruption.', warn_ar: 'خطر طفح جلدي خطير/ستيفنز جونسون عند الزيادة السريعة. يجب التحقق من الفالبروات ومحفزات الإنزيم وإعادة البدء بعد الانقطاع.',
+    ci: { hepatic_alert: true, renal_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Lamotrigine — EMA, section 4.2; schéma dépendant des co-traitements',
+  }),
+
+  t('Gabapentine', 'Douleur neuropathique périphérique — titration adulte', 'adult', {
+    dose_fr: 'J1: 300 mg; J2: 300 mg 2 fois/j; J3: 300 mg 3 fois/j', dose_ar: 'اليوم 1: 300 مغ؛ اليوم 2: 300 مغ مرتين؛ اليوم 3: 300 مغ 3 مرات',
+    freq_fr: 'Puis ajuster progressivement selon efficacité et tolérance', freq_ar: 'ثم تعدل تدريجياً حسب الفعالية والتحمل', dur_fr: 'Réévaluation précoce; arrêt progressif', dur_ar: 'إعادة تقييم مبكرة وإيقاف تدريجي', max_daily: '3600 mg/j après titration spécialisée',
+    warn_fr: 'Adapter strictement à la fonction rénale. Risque de somnolence, chutes et dépression respiratoire avec opioïdes.', warn_ar: 'تعديل صارم حسب الكلى. خطر النعاس والسقوط وتثبيط التنفس مع الأفيونات.',
+    ci: { renal_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Gabapentine — eMC, sections 4.2–4.4',
+  }),
+
+  t('Rivaroxaban', 'Prévention de l’AVC dans la fibrillation atriale non valvulaire', 'adult', {
+    dose_fr: '1 comprimé (20 mg)', dose_ar: 'قرص واحد (20 مغ)', freq_fr: '1 fois par jour au cours d’un repas', freq_ar: 'مرة يومياً أثناء الطعام', dur_fr: 'Traitement au long cours selon balance bénéfice/risque', dur_ar: 'علاج طويل الأمد حسب موازنة الفائدة والمخاطر', max_daily: '20 mg/j pour cette indication',
+    warn_fr: 'Ce schéma ne s’applique pas à la TVP/EP. Calculer la clairance rénale; 15 mg/j si critères du RCP. Vérifier saignement, interactions et fonction hépatique.', warn_ar: 'لا يطبق على الخثار الوريدي أو الصمة الرئوية. حساب تصفية الكلى؛ 15 مغ/يوم حسب معايير النشرة. مراقبة النزيف والتداخلات والكبد.',
+    ci: { renal_alert: true, hepatic_alert: true, pregnancy_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Rivaroxaban — EMA, section 4.2 (FANV)',
+  }),
+
+  t('Apixaban', 'Prévention de l’AVC dans la fibrillation atriale non valvulaire', 'adult', {
+    dose_fr: '1 comprimé (5 mg)', dose_ar: 'قرص واحد (5 مغ)', freq_fr: '2 fois par jour', freq_ar: 'مرتين يومياً', dur_fr: 'Traitement au long cours selon balance bénéfice/risque', dur_ar: 'علاج طويل الأمد حسب موازنة الفائدة والمخاطر', max_daily: '10 mg/j pour cette indication',
+    warn_fr: 'Réduire à 2,5 mg 2 fois/j si au moins 2 critères: âge ≥80 ans, poids ≤60 kg, créatinine ≥1,5 mg/dL. Ce schéma ne s’applique pas à la TVP/EP.', warn_ar: 'تخفض إلى 2.5 مغ مرتين إذا توفر معياران: العمر ≥80، الوزن ≤60 كغ، الكرياتينين ≥1.5 مغ/دل. لا يطبق على الخثار أو الصمة.',
+    ci: { renal_alert: true, hepatic_alert: true, pregnancy_alert: true }, needs_weight: true, needs_dx: true, ref: 'RCP Apixaban — EMA, section 4.2 (FANV)',
+  }),
+
+  t('Insuline glargine', 'Diabète de type 2 — initiation d’une insuline basale', 'adult', {
+    dose_fr: '10 unités ou 0,1 à 0,2 unité/kg en initiation', dose_ar: '10 وحدات أو 0.1 إلى 0.2 وحدة/كغ كجرعة بداية', freq_fr: '1 fois par jour à heure fixe, titration selon glycémies', freq_ar: 'مرة يومياً في وقت ثابت مع التعديل حسب السكر',
+    dur_fr: 'Traitement individualisé au long cours', dur_ar: 'علاج فردي طويل الأمد',
+    warn_fr: 'La dose doit être personnalisée et titrée. Vérifier dispositif et concentration (U100/U300), technique d’injection, hypoglycémies et objectifs glycémiques.', warn_ar: 'يجب تخصيص الجرعة وتعديلها. التحقق من الجهاز والتركيز وتقنية الحقن وهبوط السكر والأهداف.',
+    ci: { renal_alert: true, hepatic_alert: true }, needs_weight: true, needs_dx: true, ref: 'RCP Insuline glargine — EMA; initiation à individualiser',
+  }),
+
+  t('Donepezil', 'Traitement symptomatique de la maladie d’Alzheimer légère à modérément sévère', 'elderly', {
+    dose_fr: '1 comprimé (5 mg)', dose_ar: 'قرص واحد (5 مغ)', freq_fr: '1 fois par jour le soir', freq_ar: 'مرة يومياً مساءً',
+    dur_fr: 'Au moins 1 mois avant éventuelle augmentation à 10 mg; réévaluation régulière', dur_ar: 'شهر على الأقل قبل الزيادة المحتملة إلى 10 مغ مع إعادة تقييم دورية', max_daily: '10 mg/j',
+    warn_fr: 'Diagnostic spécialisé. Surveiller bradycardie, syncope, poids, effets digestifs et interactions anticholinergiques.', warn_ar: 'تشخيص اختصاصي. مراقبة بطء القلب والإغماء والوزن والآثار الهضمية والتداخلات المضادة للكولين.',
+    ci: { hepatic_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Donépézil — EMA/eMC, section 4.2',
+  }),
+
+  t('Mésalazine', 'Rectocolite hémorragique active légère à modérée — forme orale', 'adult', {
+    dose_fr: '2,4 g par jour (dose et prises selon formulation)', dose_ar: '2.4 غ يومياً (الجرعة والتقسيم حسب الشكل)', freq_fr: '1 à 3 prises selon la spécialité', freq_ar: 'مرة إلى 3 مرات حسب المستحضر',
+    dur_fr: 'Selon protocole gastro-entérologique et réponse', dur_ar: 'حسب بروتوكول أمراض الجهاز الهضمي والاستجابة',
+    warn_fr: 'Ne pas transposer entre formulations gastro-résistantes/libération prolongée. Contrôler fonction rénale, NFS et bilan hépatique.', warn_ar: 'لا تبدل بين الأشكال المقاومة للمعدة أو ممتدة المفعول. مراقبة الكلى وتعداد الدم والكبد.',
+    ci: { renal_alert: true, hepatic_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Mésalazine orale — formulation à vérifier, section 4.2',
+  }),
+
+  // Associations antihypertensives à dose fixe — seulement après stabilisation/titration des composants.
+  t('Irbésartan + Hydrochlorothiazide', 'Hypertension non contrôlée par irbésartan ou hydrochlorothiazide seul', 'adult', {
+    dose_fr: '1 comprimé correspondant à la dose de substitution choisie', dose_ar: 'قرص واحد بالتركيبة البديلة المختارة', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً', dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد',
+    warn_fr: 'Choisir le dosage selon les doses déjà titrées. Contrôler pression, sodium, potassium, créatinine et uricémie. Contre-indiqué pendant la grossesse.', warn_ar: 'اختيار التركيز حسب الجرعات المضبوطة. مراقبة الضغط والصوديوم والبوتاسيوم والكرياتينين وحمض اليوريك. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true, hepatic_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Irbésartan/Hydrochlorothiazide — EMA',
+  }),
+  t('Amlodipine + Valsartan', 'Hypertension nécessitant une association fixe après titration', 'adult', {
+    dose_fr: '1 comprimé au dosage correspondant aux composants déjà titrés', dose_ar: 'قرص واحد بالتركيز الموافق للمكونات المضبوطة', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً', dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد',
+    warn_fr: 'Ne pas initier sans titration des composants. Contrôler pression, œdèmes, créatinine et potassium. Contre-indiqué pendant la grossesse.', warn_ar: 'لا يبدأ دون ضبط المكونات. مراقبة الضغط والوذمة والكرياتينين والبوتاسيوم. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Amlodipine/Valsartan — EMA',
+  }),
+  t('Valsartan + Hydrochlorothiazide', 'Hypertension non contrôlée par un composant seul', 'adult', {
+    dose_fr: '1 comprimé au dosage de substitution approprié', dose_ar: 'قرص واحد بالتركيز البديل المناسب', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً', dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد',
+    warn_fr: 'Après titration des composants. Contrôler pression, sodium, potassium, créatinine et uricémie. Contre-indiqué pendant la grossesse.', warn_ar: 'بعد ضبط المكونات. مراقبة الضغط والصوديوم والبوتاسيوم والكرياتينين وحمض اليوريك. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true, hepatic_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Valsartan/Hydrochlorothiazide — EMA',
+  }),
+  t('Irbésartan + Amlodipine', 'Hypertension nécessitant une association fixe après titration', 'adult', {
+    dose_fr: '1 comprimé au dosage correspondant aux composants déjà titrés', dose_ar: 'قرص واحد بالتركيز الموافق للمكونات المضبوطة', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً', dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد',
+    warn_fr: 'Ne pas initier sans titration des composants. Contrôler pression, œdèmes, créatinine et potassium. Contre-indiqué pendant la grossesse.', warn_ar: 'لا يبدأ دون ضبط المكونات. مراقبة الضغط والوذمة والكرياتينين والبوتاسيوم. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Irbésartan/Amlodipine — dosage de substitution',
+  }),
+  t('Candésartan cilexétil + Hydrochlorothiazide', 'Hypertension non contrôlée par candésartan seul', 'adult', {
+    dose_fr: '1 comprimé au dosage de substitution approprié', dose_ar: 'قرص واحد بالتركيز البديل المناسب', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً', dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد',
+    warn_fr: 'Après titration. Contrôler pression, sodium, potassium, créatinine et uricémie. Contre-indiqué pendant la grossesse.', warn_ar: 'بعد ضبط الجرعة. مراقبة الضغط والصوديوم والبوتاسيوم والكرياتينين وحمض اليوريك. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true, hepatic_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Candésartan/Hydrochlorothiazide — EMA/eMC',
+  }),
+  t('Losartan + Hydrochlorothiazide', 'Hypertension non contrôlée par losartan seul', 'adult', {
+    dose_fr: '1 comprimé (habituellement 50 mg/12,5 mg) après titration', dose_ar: 'قرص واحد (عادة 50 مغ/12.5 مغ) بعد ضبط الجرعة', freq_fr: '1 fois par jour', freq_ar: 'مرة يومياً', dur_fr: 'Traitement au long cours', dur_ar: 'علاج طويل الأمد',
+    warn_fr: 'Contrôler pression, sodium, potassium, créatinine et uricémie. Contre-indiqué pendant la grossesse.', warn_ar: 'مراقبة الضغط والصوديوم والبوتاسيوم والكرياتينين وحمض اليوريك. يمنع أثناء الحمل.',
+    ci: { pregnancy_alert: true, renal_alert: true, hepatic_alert: true }, needs_weight: false, needs_dx: true, ref: 'RCP Losartan/Hydrochlorothiazide — EMA/eMC',
+  }),
+
 ];
 
 // ─── Output ────────────────────────────────────────────────────────────────────

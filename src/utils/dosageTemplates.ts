@@ -1,12 +1,19 @@
 import { DosageTemplate, Medicine } from '../types';
 
+const DCI_ALIASES: Record<string, string> = {
+  ibuprofen: 'ibuprofene',
+  ondansetrone: 'ondansetron',
+  sumatriptane: 'sumatriptan',
+};
+
 export function normalizeDciName(value: string): string {
-  return value
+  const normalized = value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
+  return DCI_ALIASES[normalized] || normalized;
 }
 
 export function findMatchingDosageTemplates(
