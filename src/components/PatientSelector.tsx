@@ -522,6 +522,13 @@ export default function PatientSelector({
 
                 <div className="flex gap-1">
                   <button
+                    onClick={() => onSelectPatient(null)}
+                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-white rounded-lg border border-transparent hover:border-slate-100 transition-all cursor-pointer"
+                    title="Fermer le dossier et retourner à la liste"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={startEditPatient}
                     className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-100 transition-all cursor-pointer"
                     title="Modifier le dossier patient"
