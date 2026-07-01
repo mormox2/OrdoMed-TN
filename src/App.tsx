@@ -48,6 +48,7 @@ import PrescriptionForm from './components/PrescriptionForm';
 import PrescriptionPrintView from './components/PrescriptionPrintView';
 import TestSuite from './components/TestSuite';
 import CabinetDashboard from './components/CabinetDashboard';
+import PatientDossier from './components/PatientDossier';
 import LoginScreen from './components/LoginScreen';
 import SecretaryManager from './components/SecretaryManager';
 
@@ -87,7 +88,7 @@ export default function App() {
       setAuditContext(profile.doctorUid);
       setUserProfile(profile);
       if (profile.role === 'secretary') {
-        setActiveTab('prescription');
+        setActiveTab('patients');
       }
     } catch (err: any) {
       console.error('Failed to set up user profile on retry:', err);
@@ -147,7 +148,7 @@ export default function App() {
   const [printPreviewItems, setPrintPreviewItems] = useState<PrescriptionItem[]>([]);
 
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<'prescription' | 'database' | 'doctor' | 'tests'>('prescription');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'prescription' | 'database' | 'doctor' | 'tests'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Account Deletion States
@@ -170,9 +171,9 @@ export default function App() {
           const profile = await setupUserAndGetProfile(currentUser.uid, currentUser.email || '');
           setAuditContext(profile.doctorUid);
           setUserProfile(profile);
-          // Default secretary to prescription tab (which is adjusted to only show Patients)
+          // Default secretary to patients tab
           if (profile.role === 'secretary') {
-            setActiveTab('prescription');
+            setActiveTab('patients');
           }
         } catch (err: any) {
           console.error('Failed to set up user profile:', err);
@@ -503,16 +504,40 @@ export default function App() {
               {userProfile?.role === 'doctor' ? (
                 <>
                   <button
+                    onClick={() => { setActiveTab('dashboard'); setPrintPreviewPrescription(null); }}
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      activeTab === 'dashboard'
+                        ? 'bg-sky-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                    }`}
+                    title="Tableau de bord"
+                  >
+                    <Activity className="w-4 h-4" />
+                    <span className="hidden md:inline">Tableau de bord</span>
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('patients'); setPrintPreviewPrescription(null); }}
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      activeTab === 'patients'
+                        ? 'bg-sky-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                    }`}
+                    title="Patients"
+                  >
+                    <Users className="w-4 h-4" />
+                    <span className="hidden md:inline">Patients</span>
+                  </button>
+                  <button
                     onClick={() => { setActiveTab('prescription'); setPrintPreviewPrescription(null); }}
                     className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeTab === 'prescription' && !printPreviewPrescription
                         ? 'bg-sky-600 text-white shadow-sm'
                         : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
                     }`}
-                    title="Ordonnancer"
+                    title="Ordonnance"
                   >
                     <FileText className="w-4 h-4" />
-                    <span className="hidden md:inline">Ordonnancer</span>
+                    <span className="hidden md:inline">Ordonnance</span>
                   </button>
                   <button
                     onClick={() => { setActiveTab('database'); setPrintPreviewPrescription(null); }}
@@ -524,7 +549,7 @@ export default function App() {
                     title="Médicaments / Admin"
                   >
                     <Database className="w-4 h-4" />
-                    <span className="hidden md:inline">Médicaments / Admin</span>
+                    <span className="hidden md:inline">Médicaments</span>
                   </button>
                   <button
                     onClick={() => { setActiveTab('doctor'); setPrintPreviewPrescription(null); }}
@@ -533,7 +558,7 @@ export default function App() {
                         ? 'bg-sky-600 text-white shadow-sm'
                         : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
                     }`}
-                    title="Cabinet settings"
+                    title="Cabinet"
                   >
                     <Settings className="w-4 h-4" />
                     <span className="hidden md:inline">Cabinet</span>
@@ -547,7 +572,7 @@ export default function App() {
                     }`}
                     title="Tests Qualité"
                   >
-                    <Activity className="w-4 h-4" />
+                    <HeartPulse className="w-4 h-4" />
                     <span className="hidden md:inline">Tests</span>
                   </button>
                 </>
@@ -604,6 +629,28 @@ export default function App() {
             {userProfile?.role === 'doctor' ? (
               <div className="space-y-1">
                 <button
+                  onClick={() => { setActiveTab('dashboard'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === 'dashboard'
+                      ? 'bg-sky-600 text-white shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Activity className="w-5 h-5" />
+                  <span>Tableau de bord</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab('patients'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === 'patients'
+                      ? 'bg-sky-600 text-white shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Users className="w-5 h-5" />
+                  <span>Patients</span>
+                </button>
+                <button
                   onClick={() => { setActiveTab('prescription'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                     activeTab === 'prescription' && !printPreviewPrescription
@@ -612,7 +659,7 @@ export default function App() {
                   }`}
                 >
                   <FileText className="w-5 h-5" />
-                  <span>Ordonnancer (Rédiger)</span>
+                  <span>Ordonnance</span>
                 </button>
                 <button
                   onClick={() => { setActiveTab('database'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
@@ -623,7 +670,7 @@ export default function App() {
                   }`}
                 >
                   <Database className="w-5 h-5" />
-                  <span>Médicaments / Admin</span>
+                  <span>Médicaments</span>
                 </button>
                 <button
                   onClick={() => { setActiveTab('doctor'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
@@ -634,7 +681,7 @@ export default function App() {
                   }`}
                 >
                   <Settings className="w-5 h-5" />
-                  <span>Cabinet settings</span>
+                  <span>Cabinet</span>
                 </button>
                 <button
                   onClick={() => { setActiveTab('tests'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
@@ -644,7 +691,7 @@ export default function App() {
                       : 'text-slate-300 hover:text-white hover:bg-slate-800'
                   }`}
                 >
-                  <Activity className="w-5 h-5" />
+                  <HeartPulse className="w-5 h-5" />
                   <span>Tests Qualité</span>
                 </button>
               </div>
@@ -780,8 +827,8 @@ export default function App() {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         
-        {/* Prescription Tab */}
-        {activeTab === 'prescription' && (
+        {/* Clinical Workspace (Dashboard, Patients, Prescription) */}
+        {['dashboard', 'patients', 'prescription'].includes(activeTab) && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Left side: Patient Selection (4 cols) */}
@@ -808,118 +855,9 @@ export default function App() {
               )}
             </div>
 
-            {/* Right side: Workspace or Secretary Detail (8 cols) */}
+            {/* Right side: Workspace Detail (8 cols) */}
             <div className="lg:col-span-8">
-              {userProfile?.role === 'secretary' ? (
-                selectedPatient ? (
-                  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-6 animate-fade-in">
-                    <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
-                      <div>
-                        <h2 className="text-lg font-bold text-slate-800">Dossier Patient Administratif</h2>
-                        <p className="text-xs text-slate-500">Informations administratives d'accueil enregistrées</p>
-                      </div>
-                      <span className="px-3 py-1 bg-teal-50 text-teal-700 font-semibold rounded-full text-[10px] tracking-wide uppercase border border-teal-100">
-                        Accès Secrétariat
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Nom complet</span>
-                          <p className="text-sm font-bold text-slate-800 mt-0.5">{selectedPatient.name_first} {selectedPatient.name_last}</p>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Date de naissance</span>
-                          <p className="text-sm font-semibold text-slate-800 mt-0.5">
-                            {new Date(selectedPatient.birth_date).toLocaleDateString('fr-FR')}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Genre</span>
-                          <p className="text-sm font-semibold text-slate-800 mt-0.5">{selectedPatient.gender === 'M' ? 'Masculin (♂)' : 'Féminin (♀)'}</p>
-                        </div>
-                        {selectedPatient.phone && (
-                          <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">N° Téléphone</span>
-                            <p className="text-sm font-semibold text-teal-600 mt-0.5">{selectedPatient.phone}</p>
-                          </div>
-                        )}
-                        {selectedPatient.weight && (
-                          <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Poids</span>
-                            <p className="text-sm font-semibold text-slate-800 mt-0.5">{selectedPatient.weight} kg</p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-4">
-                        <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Allergies déclarées</span>
-                          <div className="flex flex-wrap gap-1.5 mt-1">
-                            {selectedPatient.allergies.length === 0 ? (
-                              <span className="text-xs text-slate-400 italic">Aucune allergie enregistrée</span>
-                            ) : (
-                              selectedPatient.allergies.map((allergy, i) => (
-                                <span key={i} className="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-100 rounded-md text-xs font-semibold">
-                                  {allergy}
-                                </span>
-                              ))
-                            )}
-                          </div>
-                        </div>
-
-                        <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Traitements en cours</span>
-                          <div className="flex flex-col gap-1.5 mt-1.5">
-                            {!selectedPatient.current_medications || selectedPatient.current_medications.length === 0 ? (
-                              <span className="text-xs text-slate-400 italic">Aucun traitement en cours renseigné</span>
-                            ) : (
-                              selectedPatient.current_medications.map((med) => (
-                                <div key={med.id} className="flex items-center gap-2 p-2 rounded-lg border border-slate-100 bg-slate-50 text-xs text-slate-700 font-semibold">
-                                  <span className="text-slate-800">{med.medicine_label}</span>
-                                  {med.dci_name && <span className="text-[10px] text-slate-400 font-normal">({med.dci_name})</span>}
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-500 flex gap-2.5">
-                      <Lock className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
-                      <p className="leading-relaxed">
-                        Conformément aux habilitations de sécurité de l'application, les ordonnances et données de prescription clinique sont strictement isolées et restent accessibles uniquement au médecin traitant habilité.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center space-y-4">
-                    <div className="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mx-auto">
-                      <Users className="w-8 h-8" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-slate-800">Gestion Patientèle Secrétariat</h3>
-                      <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto leading-relaxed">
-                        Sélectionnez un patient dans la colonne de gauche ou cliquez sur le bouton <strong className="text-slate-700">"Ajouter un Patient"</strong> pour enregistrer un nouveau dossier administratif dans le cabinet de votre médecin.
-                      </p>
-                    </div>
-                  </div>
-                )
-              ) : selectedPatient ? (
-                <PrescriptionForm
-                  patient={selectedPatient}
-                  medicines={db.medicines}
-                  dosageTemplates={db.dosageTemplates}
-                  activePrescription={activePrescription}
-                  activeItems={activeItems}
-                  onSaveDraft={handleSaveDraft}
-                  onSignAndLock={handleSignAndLock}
-                  onOpenPrintPreview={handleOpenPrintPreview}
-                  onReset={handleResetSession}
-                />
-              ) : (
+              {activeTab === 'dashboard' && (
                 <CabinetDashboard
                   prescriptions={db.prescriptions}
                   prescriptionItems={db.prescriptionItems}
@@ -930,6 +868,41 @@ export default function App() {
                     handleOpenPrintPreview(p, items);
                   }}
                 />
+              )}
+
+              {activeTab === 'patients' && (
+                <PatientDossier 
+                  patient={selectedPatient} 
+                  userRole={userProfile?.role || 'doctor'} 
+                />
+              )}
+
+              {activeTab === 'prescription' && (
+                selectedPatient ? (
+                  <PrescriptionForm
+                    patient={selectedPatient}
+                    medicines={db.medicines}
+                    dosageTemplates={db.dosageTemplates}
+                    activePrescription={activePrescription}
+                    activeItems={activeItems}
+                    onSaveDraft={handleSaveDraft}
+                    onSignAndLock={handleSignAndLock}
+                    onOpenPrintPreview={handleOpenPrintPreview}
+                    onReset={handleResetSession}
+                  />
+                ) : (
+                  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center space-y-4">
+                    <div className="w-16 h-16 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center mx-auto">
+                      <FileText className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-800">Rédaction d'ordonnance</h3>
+                      <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto leading-relaxed">
+                        Sélectionnez un patient dans la colonne de gauche pour commencer à rédiger une ordonnance.
+                      </p>
+                    </div>
+                  </div>
+                )
               )}
             </div>
           </div>
