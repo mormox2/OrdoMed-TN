@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Prescription, 
   PrescriptionItem, 
@@ -51,30 +51,78 @@ export default function CabinetDashboard({
   const [searchQuery, setSearchQuery] = useState('');
   const [cnamOnly, setCnamOnly] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'signed' | 'draft' | 'patients'>('all');
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  // Accent-insensitive normalization (handles Tunisian names: Béjaoui, Chérif, etc.)
+  const normalize = (str: string) =>
+    str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  const normalizedQuery = useMemo(() => normalize(searchQuery), [searchQuery]);
+
+  // Reset pagination whenever the filters change, so "Voir plus" doesn't carry
+  // an inflated count across tabs/searches
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [normalizedQuery, cnamOnly, statusFilter]);
+
+  // O(1) patient lookups instead of patients.find() inside render loops
+  const patientsById = useMemo(() => {
+    const map = new Map<string, Patient>();
+    for (const p of patients) map.set(p.id, p);
+    return map;
+  }, [patients]);
+
+  // Item count per prescription (uses prescriptionItems, previously unused)
+  const itemCountByPrescription = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of prescriptionItems) {
+      map.set(item.prescription_id, (map.get(item.prescription_id) || 0) + 1);
+    }
+    return map;
+  }, [prescriptionItems]);
 
   // Stats calculation
   const totalPatients = patients.length;
-  const signedPrescriptions = prescriptions.filter(p => p.status === 'signed');
-  const totalSignedCount = signedPrescriptions.length;
-  const draftPrescriptions = prescriptions.filter(p => p.status === 'draft');
-  const totalDraftCount = draftPrescriptions.length;
+  const totalSignedCount = useMemo(
+    () => prescriptions.filter(p => p.status === 'signed').length,
+    [prescriptions]
+  );
+  const totalDraftCount = useMemo(
+    () => prescriptions.filter(p => p.status === 'draft').length,
+    [prescriptions]
+  );
 
   // Filter prescriptions list
-  const filteredPrescriptions = prescriptions.filter((p) => {
-    const matchesQuery = p.patient_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         p.prescription_number.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCnam = !cnamOnly || !!p.is_cnam_apci;
-    const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
-    return matchesQuery && matchesCnam && matchesStatus;
-  });
+  const filteredPrescriptions = useMemo(() => {
+    return prescriptions.filter((p) => {
+      const matchesQuery =
+        normalize(p.patient_name).includes(normalizedQuery) ||
+        normalize(p.prescription_number).includes(normalizedQuery);
+      const matchesCnam = !cnamOnly || !!p.is_cnam_apci;
+      const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+      return matchesQuery && matchesCnam && matchesStatus;
+    });
+  }, [prescriptions, normalizedQuery, cnamOnly, statusFilter]);
 
-  const todayStr = new Date().toDateString();
-  const todayPrescriptions = prescriptions.filter(p => new Date(p.prescription_date).toDateString() === todayStr);
+  const filteredPatients = useMemo(() => {
+    return patients.filter(p => {
+      const fullName = normalize(`${p.name_first} ${p.name_last}`);
+      const revName = normalize(`${p.name_last} ${p.name_first}`);
+      return fullName.includes(normalizedQuery) || revName.includes(normalizedQuery);
+    });
+  }, [patients, normalizedQuery]);
 
-  const recentDrafts = prescriptions
-    .filter(p => p.status === 'draft')
-    .sort((a, b) => new Date(b.updated_at || b.prescription_date).getTime() - new Date(a.updated_at || a.prescription_date).getTime())
-    .slice(0, 3);
+  const todayPrescriptions = useMemo(() => {
+    const todayStr = new Date().toDateString();
+    return prescriptions.filter(p => new Date(p.prescription_date).toDateString() === todayStr);
+  }, [prescriptions]);
+
+  const recentDrafts = useMemo(() => {
+    return prescriptions
+      .filter(p => p.status === 'draft')
+      .sort((a, b) => new Date(b.updated_at || b.prescription_date).getTime() - new Date(a.updated_at || a.prescription_date).getTime())
+      .slice(0, 3);
+  }, [prescriptions]);
 
   return (
     <div className="space-y-6" id="cabinet-activity-dashboard">
@@ -186,6 +234,7 @@ export default function CabinetDashboard({
                   <input
                     type="text"
                     placeholder="Patient ou N° ordonnance..."
+                    aria-label="Rechercher un patient ou une ordonnance"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 pr-4 py-1.5 border border-slate-200 rounded-xl text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 w-full sm:w-48 transition-all"
@@ -198,6 +247,7 @@ export default function CabinetDashboard({
                     type="checkbox"
                     checked={cnamOnly}
                     onChange={(e) => setCnamOnly(e.target.checked)}
+                    aria-label="Filtrer les ordonnances CNAM APCI uniquement"
                     className="rounded text-sky-600 focus:ring-sky-500"
                   />
                   <span>Filtre CNAM APCI</span>
@@ -207,15 +257,7 @@ export default function CabinetDashboard({
 
             {/* Content list */}
             {statusFilter === 'patients' ? (
-              (() => {
-                const filteredPatients = patients.filter(p => {
-                  const fullName = `${p.name_first} ${p.name_last}`.toLowerCase();
-                  const revName = `${p.name_last} ${p.name_first}`.toLowerCase();
-                  const query = searchQuery.toLowerCase();
-                  return fullName.includes(query) || revName.includes(query);
-                });
-                
-                return filteredPatients.length > 0 ? (
+              filteredPatients.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
@@ -261,8 +303,7 @@ export default function CabinetDashboard({
                     <Users className="w-10 h-10 text-slate-200" />
                     <div className="text-xs">Aucun patient correspondant trouvé.</div>
                   </div>
-                );
-              })()
+                )
             ) : filteredPrescriptions.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -277,8 +318,9 @@ export default function CabinetDashboard({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                    {filteredPrescriptions.slice(0, 10).map((prescription) => {
-                      const patientObj = patients.find(p => p.id === prescription.patient_id);
+                    {filteredPrescriptions.slice(0, visibleCount).map((prescription) => {
+                      const patientObj = patientsById.get(prescription.patient_id);
+                      const itemCount = itemCountByPrescription.get(prescription.id) || 0;
                       return (
                         <tr key={prescription.id} className="hover:bg-slate-50/40 transition-colors">
                           <td className="py-4 px-6 font-medium text-slate-500">
@@ -289,7 +331,10 @@ export default function CabinetDashboard({
                           </td>
                           <td className="py-4 px-6 font-semibold text-slate-800">
                             {prescription.patient_name}
-                            <span className="block text-[10px] text-slate-400 font-normal">{prescription.patient_age_str}</span>
+                            <span className="block text-[10px] text-slate-400 font-normal">
+                              {prescription.patient_age_str}
+                              {itemCount > 0 && ` · ${itemCount} méd.`}
+                            </span>
                           </td>
                           <td className="py-4 px-6">
                             {prescription.status === 'signed' ? (
@@ -341,6 +386,16 @@ export default function CabinetDashboard({
               <div className="p-16 text-center text-slate-400 flex flex-col items-center justify-center space-y-2">
                 <Activity className="w-10 h-10 text-slate-200" />
                 <div className="text-xs">Aucune ordonnance correspondante trouvée.</div>
+              </div>
+            )}
+            {statusFilter !== 'patients' && filteredPrescriptions.length > visibleCount && (
+              <div className="p-4 border-t border-slate-100 text-center">
+                <button
+                  onClick={() => setVisibleCount((c) => c + 10)}
+                  className="px-4 py-1.5 text-xs font-bold text-sky-700 hover:text-sky-800 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors cursor-pointer"
+                >
+                  Voir plus ({filteredPrescriptions.length - visibleCount} restantes)
+                </button>
               </div>
             )}
           </div>
@@ -402,7 +457,7 @@ export default function CabinetDashboard({
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
               {todayPrescriptions.length > 0 ? (
                 todayPrescriptions.map(p => {
-                  const patientObj = patients.find(patient => patient.id === p.patient_id);
+                  const patientObj = patientsById.get(p.patient_id);
                   return (
                     <div key={p.id} className="p-2.5 bg-slate-50/60 rounded-xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors">
                       <div className="min-w-0">
@@ -451,7 +506,7 @@ export default function CabinetDashboard({
             <div className="space-y-2">
               {recentDrafts.length > 0 ? (
                 recentDrafts.map(p => {
-                  const patientObj = patients.find(patient => patient.id === p.patient_id);
+                  const patientObj = patientsById.get(p.patient_id);
                   return (
                     <div key={p.id} className="p-2.5 bg-slate-50/60 rounded-xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors">
                       <div className="min-w-0">
