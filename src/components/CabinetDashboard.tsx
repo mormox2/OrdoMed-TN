@@ -95,13 +95,17 @@ export default function CabinetDashboard({
             </p>
           </div>
           <div className="shrink-0 flex items-center gap-3">
-            <div className="p-3 bg-white/5 rounded-2xl border border-white/10 text-center">
+            <div className="p-3 bg-white/5 rounded-2xl border border-white/10 text-center min-w-[70px]">
               <span className="block text-xl font-bold font-mono text-sky-400">{totalPatients}</span>
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Patients</span>
+              <span className="text-[10px] text-slate-400 uppercase font-bold">
+                {totalPatients === 1 ? 'Patient' : 'Patients'}
+              </span>
             </div>
-            <div className="p-3 bg-white/5 rounded-2xl border border-white/10 text-center">
+            <div className="p-3 bg-white/5 rounded-2xl border border-white/10 text-center min-w-[75px]">
               <span className="block text-xl font-bold font-mono text-emerald-400">{totalSignedCount}</span>
-              <span className="text-[10px] text-slate-400 uppercase font-bold">Validées</span>
+              <span className="text-[10px] text-slate-400 uppercase font-bold">
+                {totalSignedCount <= 1 ? 'Validée' : 'Validées'}
+              </span>
             </div>
           </div>
         </div>
