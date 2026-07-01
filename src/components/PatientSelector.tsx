@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Patient, CurrentMedication } from '../types';
+import { Patient, CurrentMedication, RenalStatus, HepaticStatus, PregnancyStatus } from '../types';
 import { 
   User, 
   Plus, 
@@ -163,6 +163,14 @@ export default function PatientSelector({
   const [isPregnant, setIsPregnant] = useState(false);
   const [hasRenal, setHasRenal] = useState(false);
   const [hasHepatic, setHasHepatic] = useState(false);
+  const [renalStatus, setRenalStatus] = useState<RenalStatus>('unknown');
+  const [egfr, setEgfr] = useState('');
+  const [creatinine, setCreatinine] = useState('');
+  const [hepaticStatus, setHepaticStatus] = useState<HepaticStatus>('unknown');
+  const [childPugh, setChildPugh] = useState<'' | 'A' | 'B' | 'C'>('');
+  const [pregnancyStatus, setPregnancyStatus] = useState<PregnancyStatus>('unknown');
+  const [gestationalWeeks, setGestationalWeeks] = useState('');
+  const [isBreastfeeding, setIsBreastfeeding] = useState(false);
   const [allergiesText, setAllergiesText] = useState('');
   const [allergiesList, setAllergiesList] = useState<string[]>([]);
   const [allergyInput, setAllergyInput] = useState('');
@@ -220,6 +228,14 @@ export default function PatientSelector({
     setIsPregnant(false);
     setHasRenal(false);
     setHasHepatic(false);
+    setRenalStatus('unknown');
+    setEgfr('');
+    setCreatinine('');
+    setHepaticStatus('unknown');
+    setChildPugh('');
+    setPregnancyStatus('unknown');
+    setGestationalWeeks('');
+    setIsBreastfeeding(false);
     setAllergiesText('');
     setAllergiesList([]);
     setAllergyInput('');
@@ -244,6 +260,14 @@ export default function PatientSelector({
     setIsPregnant(selectedPatient.is_pregnant || false);
     setHasRenal(selectedPatient.has_renal_impairment || false);
     setHasHepatic(selectedPatient.has_hepatic_impairment || false);
+    setRenalStatus(selectedPatient.renal_status || 'unknown');
+    setEgfr(selectedPatient.egfr !== undefined ? String(selectedPatient.egfr) : '');
+    setCreatinine(selectedPatient.creatinine !== undefined ? String(selectedPatient.creatinine) : '');
+    setHepaticStatus(selectedPatient.hepatic_status || 'unknown');
+    setChildPugh(selectedPatient.child_pugh || '');
+    setPregnancyStatus(selectedPatient.pregnancy_status || (selectedPatient.is_pregnant ? 'pregnant' : 'unknown'));
+    setGestationalWeeks(selectedPatient.gestational_age_weeks !== undefined ? String(selectedPatient.gestational_age_weeks) : '');
+    setIsBreastfeeding(selectedPatient.is_breastfeeding || false);
     setAllergiesText(selectedPatient.allergies.join(', '));
     setAllergiesList([...selectedPatient.allergies]);
     setAllergyInput('');
@@ -267,6 +291,16 @@ export default function PatientSelector({
 
     setFormError(null);
     const parsedWeight = weight ? parseFloat(weight) : undefined;
+    const clinicalProfile = {
+      renal_status: renalStatus,
+      egfr: egfr ? parseFloat(egfr) : undefined,
+      creatinine: creatinine ? parseFloat(creatinine) : undefined,
+      hepatic_status: hepaticStatus,
+      child_pugh: childPugh || undefined,
+      pregnancy_status: gender === 'F' ? pregnancyStatus : 'not_pregnant' as PregnancyStatus,
+      gestational_age_weeks: gender === 'F' && pregnancyStatus === 'pregnant' && gestationalWeeks ? parseFloat(gestationalWeeks) : undefined,
+      is_breastfeeding: gender === 'F' ? isBreastfeeding : false,
+    };
 
     if (isAdding) {
       const newPatient: Patient = {
@@ -277,9 +311,10 @@ export default function PatientSelector({
         gender,
         weight: parsedWeight,
         allergies: allergiesList,
-        is_pregnant: gender === 'F' ? isPregnant : false,
-        has_renal_impairment: hasRenal,
-        has_hepatic_impairment: hasHepatic,
+        is_pregnant: gender === 'F' && pregnancyStatus === 'pregnant',
+        has_renal_impairment: renalStatus === 'unknown' ? hasRenal : renalStatus !== 'normal',
+        has_hepatic_impairment: hepaticStatus === 'unknown' ? hasHepatic : hepaticStatus !== 'normal',
+        ...clinicalProfile,
         phone: phone.trim(),
         current_medications: currentMedicationsList,
       };
@@ -298,9 +333,10 @@ export default function PatientSelector({
         gender,
         weight: parsedWeight,
         allergies: allergiesList,
-        is_pregnant: gender === 'F' ? isPregnant : false,
-        has_renal_impairment: hasRenal,
-        has_hepatic_impairment: hasHepatic,
+        is_pregnant: gender === 'F' && pregnancyStatus === 'pregnant',
+        has_renal_impairment: renalStatus === 'unknown' ? hasRenal : renalStatus !== 'normal',
+        has_hepatic_impairment: hepaticStatus === 'unknown' ? hasHepatic : hepaticStatus !== 'normal',
+        ...clinicalProfile,
         phone: phone.trim(),
         current_medications: currentMedicationsList,
       };
@@ -1370,39 +1406,42 @@ export default function PatientSelector({
             </div>
           </div>
 
-          <div className="space-y-1.5 bg-white p-2.5 rounded-lg border border-slate-100">
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Pathologies & Facteurs de Risque</div>
-            <div className="flex flex-col gap-1.5">
-              <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasRenal}
-                  onChange={(e) => setHasRenal(e.target.checked)}
-                  className="rounded text-sky-500 focus:ring-sky-400"
-                />
-                Insuffisance rénale
+          <div className="space-y-3 bg-white p-2.5 rounded-lg border border-slate-100">
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">État clinique pour l'adaptation thérapeutique</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <label className="text-[10px] font-semibold text-slate-600">Fonction rénale
+                <select value={renalStatus} onChange={(e) => { const value = e.target.value as RenalStatus; setRenalStatus(value); setHasRenal(!['unknown', 'normal'].includes(value)); }} className="mt-1 w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white">
+                  <option value="unknown">Non renseignée</option><option value="normal">Normale</option><option value="mild">Atteinte légère</option><option value="moderate">Atteinte modérée</option><option value="severe">Atteinte sévère</option><option value="dialysis">Dialyse</option>
+                </select>
               </label>
-              <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasHepatic}
-                  onChange={(e) => setHasHepatic(e.target.checked)}
-                  className="rounded text-sky-500 focus:ring-sky-400"
-                />
-                Insuffisance hépatique
+              <label className="text-[10px] font-semibold text-slate-600">DFG (mL/min/1,73 m²)
+                <input type="number" min="0" step="0.1" value={egfr} onChange={(e) => setEgfr(e.target.value)} className="mt-1 w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" placeholder="Ex: 45" />
               </label>
-              {gender === 'F' && (
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isPregnant}
-                    onChange={(e) => setIsPregnant(e.target.checked)}
-                    className="rounded text-sky-500 focus:ring-sky-400"
-                  />
-                  Grossesse en cours / Allaitement
-                </label>
-              )}
+              <label className="text-[10px] font-semibold text-slate-600">Créatinine (µmol/L)
+                <input type="number" min="0" step="0.1" value={creatinine} onChange={(e) => setCreatinine(e.target.value)} className="mt-1 w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs" />
+              </label>
+              <label className="text-[10px] font-semibold text-slate-600">Fonction hépatique
+                <select value={hepaticStatus} onChange={(e) => { const value = e.target.value as HepaticStatus; setHepaticStatus(value); setHasHepatic(!['unknown', 'normal'].includes(value)); }} className="mt-1 w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white">
+                  <option value="unknown">Non renseignée</option><option value="normal">Normale</option><option value="mild">Atteinte légère</option><option value="moderate">Atteinte modérée</option><option value="severe">Atteinte sévère</option>
+                </select>
+              </label>
+              <label className="text-[10px] font-semibold text-slate-600">Child-Pugh
+                <select value={childPugh} onChange={(e) => setChildPugh(e.target.value as '' | 'A' | 'B' | 'C')} className="mt-1 w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white">
+                  <option value="">Non renseigné</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                </select>
+              </label>
             </div>
+            {gender === 'F' && <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-100">
+              <label className="text-[10px] font-semibold text-slate-600">Grossesse
+                <select value={pregnancyStatus} onChange={(e) => { const value = e.target.value as PregnancyStatus; setPregnancyStatus(value); setIsPregnant(value === 'pregnant'); }} className="mt-1 w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white">
+                  <option value="unknown">Non renseignée</option><option value="not_pregnant">Non enceinte</option><option value="pregnant">Enceinte</option>
+                </select>
+              </label>
+              <label className="text-[10px] font-semibold text-slate-600">Terme (semaines)
+                <input type="number" min="0" max="45" step="1" disabled={pregnancyStatus !== 'pregnant'} value={gestationalWeeks} onChange={(e) => setGestationalWeeks(e.target.value)} className="mt-1 w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs disabled:bg-slate-100" />
+              </label>
+              <label className="flex items-end gap-2 pb-1.5 text-xs font-medium text-slate-700 cursor-pointer"><input type="checkbox" checked={isBreastfeeding} onChange={(e) => setIsBreastfeeding(e.target.checked)} className="rounded text-sky-500" /> Allaitement en cours</label>
+            </div>}
           </div>
 
           {/* Current Medications Selection Sub-form */}

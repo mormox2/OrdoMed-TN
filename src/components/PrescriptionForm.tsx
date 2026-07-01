@@ -35,6 +35,7 @@ import {
   Activity
 } from 'lucide-react';
 import { logAudit } from '../data';
+import { evaluateTemplateForPatient } from '../services/clinicalTemplateEvaluator';
 import {
   checkMedicineAllergies, 
   checkDrugInteractions, 
@@ -298,21 +299,27 @@ export default function PrescriptionForm({
 
     const item = items[activeSuggestionItemIndex];
 
-    // Pediatric check
-    if (template.patient_group === 'child' && (!patient || !patient.weight)) {
-      alert("Saisie impossible : Le poids du patient pédiatrique est requis pour charger cette posologie.");
+    const clinicalEvaluation = evaluateTemplateForPatient(template, patient);
+    if (clinicalEvaluation.status === 'blocked' || clinicalEvaluation.status === 'missing_data') {
+      alert(`Saisie impossible :\n\n${clinicalEvaluation.issues.map((issue) => `• ${issue.message_fr}`).join('\n')}`);
       return;
     }
+    if (clinicalEvaluation.status === 'caution' && !confirm(`Points de vigilance clinique :\n\n${clinicalEvaluation.issues.map((issue) => `• ${issue.message_fr}`).join('\n')}\n\nContinuer avec cette suggestion ?`)) return;
+
+    const adjustedDose = clinicalEvaluation.issues.find((issue) => issue.suggested_adjustment_fr)?.suggested_adjustment_fr;
 
     const updatedItem: PrescriptionItem = {
       ...item,
-      dosage: template.dose_text_fr,
+      dosage: adjustedDose || template.dose_text_fr,
       frequency: template.frequency_text_fr,
       duration: template.duration_text_fr,
       instructions_fr: template.warnings_fr || '',
       instructions_ar: template.warnings_ar || '',
       is_suggestion_used: true,
       doctor_modified_suggestion: modifyBefore, // Flagged if doctor clicks edit
+      template_id: template.id,
+      template_version: template.version ?? 1,
+      clinical_evaluation: clinicalEvaluation,
       updated_at: new Date().toISOString(),
     };
 
@@ -396,6 +403,29 @@ export default function PrescriptionForm({
     if (isPediatric && !patient.weight) {
       alert("Alerte Bloquante : Le poids du patient pédiatrique doit être saisi dans le dossier avant de signer l'ordonnance.");
       return;
+    }
+
+    const refreshedItems = items.map((item) => {
+      if (!item.template_id) return item;
+      const template = dosageTemplates.find((candidate) => candidate.id === item.template_id);
+      if (!template) return item;
+      return { ...item, clinical_evaluation: evaluateTemplateForPatient(template, patient) };
+    });
+    const clinicalIssues = refreshedItems.flatMap((item) => item.clinical_evaluation?.issues || []);
+    const blockingIssues = clinicalIssues.filter((issue) => issue.severity === 'blocked' || issue.severity === 'missing_data');
+    if (blockingIssues.length) {
+      alert(`Signature bloquée — profil clinique incompatible ou incomplet :\n\n${blockingIssues.map((issue) => `• ${issue.message_fr}`).join('\n')}`);
+      return;
+    }
+    const cautionIssues = clinicalIssues.filter((issue) => issue.severity === 'caution');
+    let clinicalOverrideReason = '';
+    if (cautionIssues.length) {
+      if (!confirm(`Vigilances cliniques à confirmer avant signature :\n\n${cautionIssues.map((issue) => `• ${issue.message_fr}`).join('\n')}\n\nConfirmer la poursuite ?`)) return;
+      clinicalOverrideReason = prompt('Motif clinique de poursuite (obligatoire pour la traçabilité) :')?.trim() || '';
+      if (!clinicalOverrideReason) {
+        alert('La justification clinique est obligatoire pour signer malgré une vigilance.');
+        return;
+      }
     }
 
     // Double check suspended AMMs in active items
@@ -506,9 +536,15 @@ export default function PrescriptionForm({
       patient_weight: patient.weight,
       patient_allergies: patient.allergies,
       is_cnam_apci: isCnamApci,
+      clinical_validation: {
+        status: cautionIssues.length ? 'caution' : 'compatible',
+        evaluated_at: new Date().toISOString(),
+        issues_count: clinicalIssues.length,
+        override_reason: clinicalOverrideReason || undefined,
+      },
     };
 
-    const updatedItems = items.map(item => ({
+    const updatedItems = refreshedItems.map(item => ({
       ...item,
       prescription_id: presId
     }));
@@ -1256,16 +1292,8 @@ export default function PrescriptionForm({
             {/* Protocol recommendations list */}
             <div className="p-6 overflow-y-auto space-y-4 divide-y divide-slate-100 flex-1">
               {matchedTemplates.map((template) => {
-                // Match client factors
-                let isGroupMatch = true;
-                if (patient) {
-                  const age = getPatientAge(patient.birth_date);
-                  if (template.patient_group === 'child' && age >= 15) isGroupMatch = false;
-                  if (template.patient_group === 'adult' && age < 15) isGroupMatch = false;
-                  if (template.contraindication_flags?.pregnancy_alert && patient.is_pregnant) isGroupMatch = false;
-                  if (template.contraindication_flags?.renal_alert && patient.has_renal_impairment) isGroupMatch = false;
-                  if (template.contraindication_flags?.hepatic_alert && patient.has_hepatic_impairment) isGroupMatch = false;
-                }
+                const clinicalEvaluation = evaluateTemplateForPatient(template, patient);
+                const cannotUse = clinicalEvaluation.status === 'blocked' || clinicalEvaluation.status === 'missing_data';
 
                 return (
                   <div key={template.id} className="pt-4 first:pt-0 space-y-3.5">
@@ -1283,12 +1311,16 @@ export default function PrescriptionForm({
                         <h4 className="font-bold text-slate-800 text-sm mt-1">Indication : {template.indication}</h4>
                       </div>
 
-                      {!isGroupMatch && (
-                        <span className="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold rounded flex items-center gap-0.5 animate-pulse">
-                          <AlertTriangle className="w-3.5 h-3.5" /> Profil à risque
+                      {clinicalEvaluation.status !== 'compatible' && (
+                        <span className={`px-2 py-0.5 border text-[10px] font-bold rounded flex items-center gap-0.5 ${cannotUse ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                          <AlertTriangle className="w-3.5 h-3.5" /> {cannotUse ? 'Utilisation bloquée' : 'Prudence'}
                         </span>
                       )}
                     </div>
+
+                    {clinicalEvaluation.issues.length > 0 && <div className={`rounded-lg border p-2.5 text-[11px] ${cannotUse ? 'bg-rose-50/60 border-rose-100 text-rose-800' : 'bg-amber-50/60 border-amber-100 text-amber-800'}`}>
+                      {clinicalEvaluation.issues.map((issue) => <div key={issue.code}>• {issue.message_fr}</div>)}
+                    </div>}
 
                     {/* Bilingual description */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100/50">
@@ -1322,15 +1354,17 @@ export default function PrescriptionForm({
                     <div className="flex justify-end gap-2.5 pt-1">
                       <button
                         type="button"
+                        disabled={cannotUse}
                         onClick={() => handleApplySuggestion(template, true)}
-                        className="px-3 py-1.5 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold text-slate-600 transition-colors cursor-pointer"
+                        className="px-3 py-1.5 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold text-slate-600 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         Modifier avant insertion
                       </button>
                       <button
                         type="button"
+                        disabled={cannotUse}
                         onClick={() => handleApplySuggestion(template, false)}
-                        className="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                        className="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         Utiliser cette suggestion
                       </button>

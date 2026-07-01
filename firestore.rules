@@ -136,7 +136,10 @@ service cloud.firestore {
       return data.keys().hasOnly([
                'id', 'doctorUid', 'name_first', 'name_last', 'birth_date', 'gender',
                'weight', 'allergies', 'is_pregnant', 'has_renal_impairment',
-               'has_hepatic_impairment', 'phone', 'current_medications', 'vitals_history'
+               'has_hepatic_impairment', 'renal_status', 'egfr', 'creatinine',
+               'hepatic_status', 'child_pugh', 'pregnancy_status',
+               'gestational_age_weeks', 'is_breastfeeding', 'phone',
+               'current_medications', 'vitals_history'
              ]) &&
              data.id == patientId && isValidId(data.id) &&
              isValidId(data.doctorUid) &&
@@ -149,6 +152,14 @@ service cloud.firestore {
              (!('is_pregnant' in data) || data.is_pregnant is bool) &&
              (!('has_renal_impairment' in data) || data.has_renal_impairment is bool) &&
              (!('has_hepatic_impairment' in data) || data.has_hepatic_impairment is bool) &&
+             (!('renal_status' in data) || data.renal_status in ['unknown', 'normal', 'mild', 'moderate', 'severe', 'dialysis']) &&
+             (!('egfr' in data) || (data.egfr is number && data.egfr >= 0 && data.egfr <= 300)) &&
+             (!('creatinine' in data) || (data.creatinine is number && data.creatinine >= 0 && data.creatinine <= 10000)) &&
+             (!('hepatic_status' in data) || data.hepatic_status in ['unknown', 'normal', 'mild', 'moderate', 'severe']) &&
+             (!('child_pugh' in data) || data.child_pugh in ['A', 'B', 'C']) &&
+             (!('pregnancy_status' in data) || data.pregnancy_status in ['unknown', 'not_pregnant', 'pregnant']) &&
+             (!('gestational_age_weeks' in data) || (data.gestational_age_weeks is number && data.gestational_age_weeks >= 0 && data.gestational_age_weeks <= 45)) &&
+             (!('is_breastfeeding' in data) || data.is_breastfeeding is bool) &&
              (!('phone' in data) || (data.phone is string && data.phone.size() <= 64)) &&
              (!('current_medications' in data) || (data.current_medications is list && data.current_medications.size() <= 100)) &&
              (!('vitals_history' in data) || (data.vitals_history is list && data.vitals_history.size() <= 500));
@@ -159,7 +170,8 @@ service cloud.firestore {
                'id', 'doctorUid', 'patient_id', 'doctor_id', 'prescription_number',
                'prescription_date', 'notes_private', 'print_language_mode', 'status',
                'created_at', 'updated_at', 'signed_at', 'patient_name', 'patient_age_str',
-               'patient_gender', 'patient_weight', 'patient_allergies', 'is_cnam_apci'
+               'patient_gender', 'patient_weight', 'patient_allergies', 'is_cnam_apci',
+               'clinical_validation'
              ]) &&
              data.id == prescriptionId && isValidId(data.id) &&
              isValidId(data.doctorUid) &&
@@ -178,6 +190,14 @@ service cloud.firestore {
              (!('notes_private' in data) || (data.notes_private is string && data.notes_private.size() <= 10000)) &&
              (!('patient_weight' in data) || data.patient_weight is number) &&
              (!('is_cnam_apci' in data) || data.is_cnam_apci is bool) &&
+             (!('clinical_validation' in data) || (
+               data.clinical_validation is map &&
+               data.clinical_validation.keys().hasOnly(['status', 'evaluated_at', 'issues_count', 'override_reason']) &&
+               data.clinical_validation.status in ['compatible', 'caution', 'blocked', 'missing_data'] &&
+               data.clinical_validation.evaluated_at is string && data.clinical_validation.evaluated_at.size() <= 64 &&
+               data.clinical_validation.issues_count is int && data.clinical_validation.issues_count >= 0 && data.clinical_validation.issues_count <= 200 &&
+               (!('override_reason' in data.clinical_validation) || (data.clinical_validation.override_reason is string && data.clinical_validation.override_reason.size() <= 2000))
+             )) &&
              (data.status != 'signed' || ('signed_at' in data && data.signed_at is string && data.signed_at.size() <= 64));
     }
 
@@ -186,7 +206,8 @@ service cloud.firestore {
                'id', 'doctorUid', 'prescription_id', 'medicine_id', 'custom_medicine_name',
                'line_order', 'medicine_label', 'dci_name', 'dosage', 'frequency',
                'duration', 'quantity', 'instructions_fr', 'instructions_ar',
-               'is_suggestion_used', 'doctor_modified_suggestion', 'created_at', 'updated_at'
+               'is_suggestion_used', 'doctor_modified_suggestion', 'template_id',
+               'template_version', 'clinical_evaluation', 'created_at', 'updated_at'
              ]) &&
              data.id == itemId && isValidId(data.id) &&
              isValidId(data.doctorUid) &&
@@ -205,7 +226,19 @@ service cloud.firestore {
              (!('custom_medicine_name' in data) || (data.custom_medicine_name is string && data.custom_medicine_name.size() <= 256)) &&
              (!('dci_name' in data) || (data.dci_name is string && data.dci_name.size() <= 256)) &&
              (!('instructions_fr' in data) || (data.instructions_fr is string && data.instructions_fr.size() <= 2000)) &&
-             (!('instructions_ar' in data) || (data.instructions_ar is string && data.instructions_ar.size() <= 2000));
+             (!('instructions_ar' in data) || (data.instructions_ar is string && data.instructions_ar.size() <= 2000)) &&
+             (!('template_id' in data) || (data.template_id is string && data.template_id.size() <= 128)) &&
+             (!('template_version' in data) || (data.template_version is int && data.template_version > 0 && data.template_version <= 10000)) &&
+             (!('clinical_evaluation' in data) || (
+               data.clinical_evaluation is map &&
+               data.clinical_evaluation.keys().hasOnly(['status', 'evaluated_at', 'template_id', 'template_version', 'issues']) &&
+               data.clinical_evaluation.status in ['compatible', 'caution', 'blocked', 'missing_data'] &&
+               data.clinical_evaluation.evaluated_at is string && data.clinical_evaluation.evaluated_at.size() <= 64 &&
+               data.clinical_evaluation.template_id is string && data.clinical_evaluation.template_id.size() <= 128 &&
+               data.clinical_evaluation.template_version is int && data.clinical_evaluation.template_version > 0 &&
+               data.clinical_evaluation.issues is list && data.clinical_evaluation.issues.size() <= 50
+             ));
+
     }
 
     function parentPrescriptionIsEditable(data) {

@@ -83,6 +83,9 @@ export interface DosageTemplate {
   };
   requires_weight?: boolean;
   requires_diagnosis?: boolean;
+  version?: number;
+  clinical_review_status?: 'draft' | 'reviewed' | 'approved';
+  clinical_rules?: TemplateClinicalRules;
   validation_status: ValidationStatus;
   validated_by?: string;
   validated_at?: string;
@@ -90,6 +93,48 @@ export interface DosageTemplate {
   created_at: string;
   updated_at: string;
 }
+
+export type ClinicalRuleAction = 'allowed' | 'caution' | 'adjust' | 'blocked' | 'specialist';
+export type ClinicalIssueSeverity = 'caution' | 'blocked' | 'missing_data';
+export type ClinicalEvaluationStatus = 'compatible' | ClinicalIssueSeverity;
+
+export interface ClinicalRule {
+  action: ClinicalRuleAction;
+  message_fr: string;
+  message_ar?: string;
+  dose_override_fr?: string;
+  dose_override_ar?: string;
+}
+
+export interface TemplateClinicalRules {
+  age?: ClinicalRule & { min?: number; max?: number };
+  weight?: ClinicalRule & { required?: boolean; min?: number; max?: number };
+  pregnancy?: ClinicalRule;
+  breastfeeding?: ClinicalRule;
+  renal?: Array<ClinicalRule & { egfr_below?: number; egfr_at_or_above?: number }>;
+  hepatic?: Array<ClinicalRule & { severity?: HepaticStatus | 'any_impairment' }>;
+}
+
+export interface ClinicalIssue {
+  code: string;
+  severity: ClinicalIssueSeverity;
+  message_fr: string;
+  message_ar?: string;
+  suggested_adjustment_fr?: string;
+  suggested_adjustment_ar?: string;
+}
+
+export interface ClinicalEvaluation {
+  status: ClinicalEvaluationStatus;
+  evaluated_at: string;
+  template_id: string;
+  template_version: number;
+  issues: ClinicalIssue[];
+}
+
+export type RenalStatus = 'unknown' | 'normal' | 'mild' | 'moderate' | 'severe' | 'dialysis';
+export type HepaticStatus = 'unknown' | 'normal' | 'mild' | 'moderate' | 'severe';
+export type PregnancyStatus = 'unknown' | 'not_pregnant' | 'pregnant';
 
 export interface CurrentMedication {
   id: string;
@@ -117,6 +162,14 @@ export interface Patient {
   is_pregnant?: boolean;
   has_renal_impairment?: boolean;
   has_hepatic_impairment?: boolean;
+  renal_status?: RenalStatus;
+  egfr?: number;
+  creatinine?: number;
+  hepatic_status?: HepaticStatus;
+  child_pugh?: 'A' | 'B' | 'C';
+  pregnancy_status?: PregnancyStatus;
+  gestational_age_weeks?: number;
+  is_breastfeeding?: boolean;
   phone?: string;
   current_medications?: CurrentMedication[];
   vitals_history?: VitalRecord[];
@@ -142,6 +195,12 @@ export interface Prescription {
   patient_weight?: number;
   patient_allergies: string[];
   is_cnam_apci?: boolean;
+  clinical_validation?: {
+    status: ClinicalEvaluationStatus;
+    evaluated_at: string;
+    issues_count: number;
+    override_reason?: string;
+  };
 }
 
 export interface PrescriptionItem {
@@ -160,6 +219,9 @@ export interface PrescriptionItem {
   instructions_ar?: string;
   is_suggestion_used: boolean;
   doctor_modified_suggestion: boolean;
+  template_id?: string;
+  template_version?: number;
+  clinical_evaluation?: ClinicalEvaluation;
   created_at: string;
   updated_at: string;
 }

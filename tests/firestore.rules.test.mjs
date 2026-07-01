@@ -242,6 +242,18 @@ describe('audit events', () => {
 });
 
 describe('security_spec Dirty Dozen', () => {
+  test('accepts a structured clinical profile and rejects invalid renal values', async () => {
+    await seed(async (db) => setDoc(doc(db, 'users', 'doctor-a'), profile('doctor-a', 'doctor-a@example.com')));
+    const doctorDb = dbFor('doctor-a', 'doctor-a@example.com');
+    await assertSucceeds(setDoc(doc(doctorDb, 'patients', 'clinical-patient'), {
+      ...patient('clinical-patient', 'doctor-a'), renal_status: 'moderate', egfr: 42, creatinine: 140,
+      hepatic_status: 'mild', child_pugh: 'A', pregnancy_status: 'not_pregnant', is_breastfeeding: false,
+    }));
+    await assertFails(setDoc(doc(doctorDb, 'patients', 'bad-clinical-patient'), {
+      ...patient('bad-clinical-patient', 'doctor-a'), renal_status: 'critical', egfr: -1,
+    }));
+  });
+
   test('all documented privilege-escalation payloads are denied', async () => {
     await seed(async (db) => {
       await setDoc(doc(db, 'users', 'doctor-a'), profile('doctor-a', 'doctor-a@example.com'));
