@@ -267,7 +267,6 @@ export async function savePrescriptionBundleToFirestore(
   try {
     const existingItemsQuery = query(
       collection(db, 'prescriptionItems'),
-      where('doctorUid', '==', doctorUid),
       where('prescription_id', '==', prescription.id)
     );
     const existingItems = await getDocs(existingItemsQuery);
