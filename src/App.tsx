@@ -152,40 +152,52 @@ export default function App() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // 1. Auth state change listener
+  // 1. Keep the auth callback synchronous. Awaiting another Supabase request
+  // inside onAuthStateChange can deadlock the client auth lock.
   useEffect(() => {
-    const unsubscribe = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
-      setAuthLoading(true);
       setAuthError(null);
       setUserProfile(null);
-      clearSensitiveClientState();
-      if (currentUser) {
-        setUser(currentUser);
-        try {
-          const profile = await setupUserAndGetProfile(currentUser.id, currentUser.email || '');
-          setAuditContext(profile.doctorUid);
-          setUserProfile(profile);
-          // Default secretary to patients tab
-          if (profile.role === 'secretary') {
-            setActiveTab('patients');
-          }
-        } catch (err: any) {
-          console.error('Failed to set up user profile:', err);
-          setAuthError(err?.message || "Erreur d'accès à la base de données sécurisée. Veuillez vérifier vos permissions.");
-        }
-      } else {
-        setUser(null);
+      setUser(currentUser);
+      setAuthLoading(Boolean(currentUser));
+
+      if (!currentUser) {
+        clearSensitiveClientState();
         setSelectedPatient(null);
         setActivePrescription(null);
         setActiveItems([]);
       }
-      setAuthLoading(false);
     });
-    return () => { unsubscribe.data.subscription.unsubscribe(); };
+    return () => { subscription.unsubscribe(); };
   }, []);
 
-  // 2. Supabase synchronization.
+  // 2. Initialize the secured workspace outside the auth callback.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    const initializeProfile = async () => {
+      try {
+        const profile = await setupUserAndGetProfile(user.id, user.email || '');
+        if (cancelled) return;
+        setAuditContext(profile.doctorUid);
+        setUserProfile(profile);
+        if (profile.role === 'secretary') setActiveTab('patients');
+      } catch (err: any) {
+        if (cancelled) return;
+        console.error('Failed to set up user profile:', err);
+        setAuthError(err?.message || "Erreur d'accès à la base de données sécurisée. Veuillez vérifier vos permissions.");
+      } finally {
+        if (!cancelled) setAuthLoading(false);
+      }
+    };
+
+    void initializeProfile();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // 3. Supabase synchronization.
   useEffect(() => {
     if (!userProfile) return; let cancelled = false;
     const refresh = async () => { try { const remote = await loadClinicalData(userProfile); if (!cancelled) setDb(prev => ({ ...prev, ...remote, doctorConfig: remote.doctorConfig || DEFAULT_DOCTOR_CONFIG })); } catch (error) { console.error('Supabase synchronization error:', error); } };
