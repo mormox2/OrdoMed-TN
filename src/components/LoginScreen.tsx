@@ -795,6 +795,12 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
                   className="font-semibold text-teal-400 underline underline-offset-2 hover:text-teal-300"
                 >
                   conditions d’utilisation
+                </a>{' '}et notre{' '}
+                <a
+                  href="/confidentialite"
+                  className="font-semibold text-teal-400 underline underline-offset-2 hover:text-teal-300"
+                >
+                  politique de confidentialité
                 </a>.
               </p>
 

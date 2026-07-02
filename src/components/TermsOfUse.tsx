@@ -37,8 +37,10 @@ export default function TermsOfUse() {
             </section>
           ))}
         </div>
+        <div className="mt-10 border-t border-slate-800 pt-6 text-sm text-slate-400">
+          Consultez également notre <a href="/confidentialite" className="font-semibold text-teal-400 underline underline-offset-2 hover:text-teal-300">politique de confidentialité</a>.
+        </div>
       </article>
     </main>
   );
 }
-
