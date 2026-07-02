@@ -45,6 +45,7 @@ import CabinetDashboard from './components/CabinetDashboard';
 import PatientDossier from './components/PatientDossier';
 import LoginScreen from './components/LoginScreen';
 import SecretaryManager from './components/SecretaryManager';
+import ProfileSettings from './components/ProfileSettings';
 
 // Icons
 import {
@@ -142,7 +143,7 @@ export default function App() {
   const [printPreviewItems, setPrintPreviewItems] = useState<PrescriptionItem[]>([]);
 
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'prescription' | 'database' | 'doctor' | 'tests'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'prescription' | 'database' | 'doctor' | 'tests' | 'profile'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Account Deletion States
@@ -545,6 +546,14 @@ export default function App() {
                 </span>
               </div>
               <button
+                onClick={() => { setActiveTab('profile'); setPrintPreviewPrescription(null); }}
+                className={`p-2 rounded-xl transition-all cursor-pointer border ${activeTab === 'profile' ? 'bg-sky-600 text-white border-sky-500' : 'text-slate-400 hover:text-white hover:bg-slate-800 border-transparent hover:border-slate-800/60'}`}
+                title="Mon profil"
+                aria-label="Mon profil"
+              >
+                <User className="w-4.5 h-4.5" />
+              </button>
+              <button
                 onClick={handleLogout}
                 className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-800/60"
                 title="Se déconnecter"
@@ -657,7 +666,14 @@ export default function App() {
                   {userProfile?.role === 'doctor' ? 'Médecin 🩺' : 'Secrétaire 📋'}
                 </span>
               </div>
-              <div className="px-2">
+              <div className="px-2 space-y-2">
+                <button
+                  onClick={() => { setActiveTab('profile'); setPrintPreviewPrescription(null); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 text-xs rounded-xl transition-all cursor-pointer border ${activeTab === 'profile' ? 'bg-sky-600 text-white border-sky-500' : 'text-slate-300 hover:text-white hover:bg-slate-800 border-slate-800'}`}
+                >
+                  <User className="w-4 h-4" />
+                  <span>Mon profil</span>
+                </button>
                 <button
                   onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
                   className="w-full flex items-center justify-center gap-2 py-2.5 text-xs text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-all cursor-pointer border border-slate-800"
@@ -752,7 +768,8 @@ export default function App() {
             doctorConfig={db.doctorConfig}
             onBack={() => setPrintPreviewPrescription(null)}
           />
-        </main>
+
+      </main>
       </div>
     );
   }
@@ -881,6 +898,11 @@ export default function App() {
           <TestSuite />
         )}
 
+
+        {/* Authenticated account profile */}
+        {activeTab === 'profile' && userProfile && user && (
+          <ProfileSettings user={user} profile={userProfile} />
+        )}
       </main>
 
       {/* ACCOUNT DELETION MODAL WITH ACCIDENTAL PROTECTION */}
