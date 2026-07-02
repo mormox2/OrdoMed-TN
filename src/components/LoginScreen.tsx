@@ -788,6 +788,15 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
                   <li>{t.securityRule2}</li>
                 </ul>
               </div>
+              <p className="text-center text-[11px] leading-relaxed text-slate-500">
+                En continuant, vous acceptez nos{' '}
+                <a
+                  href="/conditions-utilisation"
+                  className="font-semibold text-teal-400 underline underline-offset-2 hover:text-teal-300"
+                >
+                  conditions d’utilisation
+                </a>.
+              </p>
 
             </div>
           </div>

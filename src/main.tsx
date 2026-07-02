@@ -1,6 +1,7 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
+import TermsOfUse from './components/TermsOfUse.tsx';
 import './index.css';
 
 // Register Service Worker for PWA
@@ -18,6 +19,6 @@ if ('serviceWorker' in navigator) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {window.location.pathname === '/conditions-utilisation' ? <TermsOfUse /> : <App />}
   </StrictMode>,
 );
