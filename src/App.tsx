@@ -416,6 +416,7 @@ export default function App() {
       quantity: item.quantity,
       instructions_fr: item.instructions_fr,
       instructions_ar: item.instructions_ar,
+      show_instructions: item.show_instructions,
       is_suggestion_used: item.is_suggestion_used,
       doctor_modified_suggestion: item.doctor_modified_suggestion,
       created_at: new Date().toISOString(),

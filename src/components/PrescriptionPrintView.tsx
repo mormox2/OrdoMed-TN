@@ -421,7 +421,7 @@ export default function PrescriptionPrintView({
                           <div className="font-bold text-slate-900">
                             {item.dosage} • {item.frequency} pendant {item.duration}
                           </div>
-                          {item.instructions_fr && (
+                          {item.instructions_fr && item.show_instructions !== false && (
                             <div className="text-[10px] text-slate-500 italic">Consignes : {item.instructions_fr}</div>
                           )}
                         </div>
@@ -433,7 +433,7 @@ export default function PrescriptionPrintView({
                           <div className="font-bold text-slate-900">
                             {item.dosage} • {item.frequency} لمدة {item.duration}
                           </div>
-                          {item.instructions_ar && (
+                          {item.instructions_ar && item.show_instructions !== false && (
                             <div className="text-[10px] text-slate-500 italic">إرشادات : {item.instructions_ar}</div>
                           )}
                         </div>

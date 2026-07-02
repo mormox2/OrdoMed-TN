@@ -347,6 +347,13 @@ export default function PrescriptionForm({
     setItems(updated);
   };
 
+  const handleLineCheckboxChange = (index: number, field: 'show_instructions', value: boolean) => {
+    const updated = [...items];
+    const item = { ...updated[index], [field]: value };
+    updated[index] = item;
+    setItems(updated);
+  };
+
   const handleRemoveLine = (index: number) => {
     const updated = items.filter((_, i) => i !== index).map((item, idx) => ({
       ...item,
@@ -1126,7 +1133,22 @@ export default function PrescriptionForm({
                         </div>
 
                         {/* Instructions Bilingues */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-7 pt-3 mt-3 border-t border-slate-100">
+                        <div className="pl-7 pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              disabled={isFormLocked}
+                              checked={item.show_instructions !== false}
+                              onChange={(e) => handleLineCheckboxChange(index, 'show_instructions', e.target.checked)}
+                              className="rounded text-sky-600 focus:ring-sky-500 cursor-pointer w-3.5 h-3.5 border-slate-300"
+                            />
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-3.5 h-3.5 text-slate-400" />
+                              Imprimer les instructions sur l'ordonnance
+                            </span>
+                          </label>
+                        </div>
+                        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 pl-7 mt-2 transition-opacity duration-200 ${item.show_instructions === false ? 'opacity-50' : ''}`}>
                           <div>
                             <label className="text-[9px] text-slate-400 font-bold uppercase flex items-center gap-1 mb-1">
                               Instructions (Français)

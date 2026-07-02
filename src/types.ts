@@ -217,6 +217,7 @@ export interface PrescriptionItem {
   quantity: string;
   instructions_fr?: string;
   instructions_ar?: string;
+  show_instructions?: boolean;
   is_suggestion_used: boolean;
   doctor_modified_suggestion: boolean;
   template_id?: string;
