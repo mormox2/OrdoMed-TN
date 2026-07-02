@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword 
-} from 'firebase/auth';
-import { auth } from '../firebase';
+import { supabase } from '../supabase';
 import Logo from './Logo';
 import { 
   LogIn, 
@@ -175,16 +169,9 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
     setError(null);
     setLoading(true);
     onLoginStart();
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
-
     try {
-      const result = await signInWithPopup(auth, provider);
-      if (result.user) {
-        onLoginSuccess(result.user);
-      }
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin } });
+      if (error) throw error;
     } catch (err: any) {
       console.error('Google Auth error:', err);
       let errMsg = lang === 'fr' 
@@ -228,16 +215,14 @@ export default function LoginScreen({ onLoginStart, onLoginSuccess }: LoginScree
     try {
       if (mode === 'signin') {
         // Sign In
-        const result = await signInWithEmailAndPassword(auth, email.trim(), password);
-        if (result.user) {
-          onLoginSuccess(result.user);
-        }
+        const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) throw error;
+        if (data.user) onLoginSuccess(data.user);
       } else {
         // Sign Up
-        const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
-        if (result.user) {
-          onLoginSuccess(result.user);
-        }
+        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+        if (error) throw error;
+        if (data.user) onLoginSuccess(data.user);
       }
     } catch (err: any) {
       console.error('Email Auth error:', err);

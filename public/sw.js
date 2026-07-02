@@ -32,11 +32,8 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Event: network first, fallback to cache for pages/assets
 self.addEventListener('fetch', (event) => {
-  // Do not intercept non-GET requests or Firebase/API calls
-  if (event.request.method !== 'GET' || 
-      event.request.url.includes('firestore.googleapis.com') ||
-      event.request.url.includes('identitytoolkit.googleapis.com') ||
-      event.request.url.includes('securetoken.googleapis.com') ||
+  // Do not intercept non-GET requests
+  if (event.request.method !== 'GET' ||
       event.request.url.includes('/api/') ||
       event.request.url.includes('qrserver.com')) {
     return;

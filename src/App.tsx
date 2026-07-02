@@ -4,38 +4,32 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  getDbState, 
+import {
+  getDbState,
   logAudit,
   setAuditContext,
   DEFAULT_DOCTOR_CONFIG
 } from './data';
-import { 
-  Patient, 
-  Medicine, 
-  Prescription, 
-  PrescriptionItem, 
-  DoctorConfig 
+import {
+  Patient,
+  Medicine,
+  Prescription,
+  PrescriptionItem,
+  DoctorConfig
 } from './types';
 
-// Firebase & Services
-import { db as dbFirestore, auth } from './firebase';
-import { signOut } from 'firebase/auth';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
-  doc
-} from 'firebase/firestore';
-import { 
-  setupUserAndGetProfile, 
-  savePatientToFirestore, 
-  deletePatientFromFirestore, 
-  savePrescriptionBundleToFirestore,
-  saveDoctorConfig as saveDoctorConfigToFirestore, 
+// Supabase & Services
+import { supabase } from './supabase';
+import {
+  setupUserAndGetProfile,
+  savePatient,
+  deletePatient,
+  savePrescriptionBundle,
+  saveDoctorConfig,
   deleteUserAccount,
-  UserProfile 
+  UserProfile,
+  loadClinicalData,
+  subscribeClinicalData
 } from './services/dbService';
 
 // Sub-components
@@ -53,13 +47,13 @@ import LoginScreen from './components/LoginScreen';
 import SecretaryManager from './components/SecretaryManager';
 
 // Icons
-import { 
-  FileText, 
-  Database, 
-  Settings, 
-  Activity, 
-  HeartPulse, 
-  User, 
+import {
+  FileText,
+  Database,
+  Settings,
+  Activity,
+  HeartPulse,
+  User,
   LogOut,
   Lock,
   Loader2,
@@ -84,7 +78,7 @@ export default function App() {
     setAuthLoading(true);
     setAuthError(null);
     try {
-      const profile = await setupUserAndGetProfile(user.uid, user.email || '');
+      const profile = await setupUserAndGetProfile(user.id, user.email || '');
       setAuditContext(profile.doctorUid);
       setUserProfile(profile);
       if (profile.role === 'secretary') {
@@ -135,10 +129,10 @@ export default function App() {
       console.warn('Unable to scrub local sensitive state:', error);
     }
   };
-  
+
   // Selected Contexts
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  
+
   // Active drafting prescription
   const [activePrescription, setActivePrescription] = useState<Prescription | null>(null);
   const [activeItems, setActiveItems] = useState<PrescriptionItem[]>([]);
@@ -160,7 +154,8 @@ export default function App() {
 
   // 1. Auth state change listener
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+    const unsubscribe = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null;
       setAuthLoading(true);
       setAuthError(null);
       setUserProfile(null);
@@ -168,7 +163,7 @@ export default function App() {
       if (currentUser) {
         setUser(currentUser);
         try {
-          const profile = await setupUserAndGetProfile(currentUser.uid, currentUser.email || '');
+          const profile = await setupUserAndGetProfile(currentUser.id, currentUser.email || '');
           setAuditContext(profile.doctorUid);
           setUserProfile(profile);
           // Default secretary to patients tab
@@ -187,71 +182,15 @@ export default function App() {
       }
       setAuthLoading(false);
     });
-    return () => unsubscribe();
+    return () => { unsubscribe.data.subscription.unsubscribe(); };
   }, []);
 
-  // 2. Real-time synchronization with Firestore
+  // 2. Supabase synchronization.
   useEffect(() => {
-    if (!userProfile) return;
-
-    // A. Listen to Doctor Config
-    const configUnsub = onSnapshot(doc(dbFirestore, 'doctorConfigs', userProfile.doctorUid), (docSnap) => {
-      if (docSnap.exists()) {
-        setDb(prev => ({ ...prev, doctorConfig: docSnap.data() as DoctorConfig }));
-      }
-    }, (err) => {
-      console.error('Config snapshot error:', err);
-    });
-
-    // B. Listen to Patients
-    const patientsQuery = query(collection(dbFirestore, 'patients'), where('doctorUid', '==', userProfile.doctorUid));
-    const patientsUnsub = onSnapshot(patientsQuery, (snap) => {
-      const patientList: Patient[] = [];
-      snap.forEach((docSnap) => {
-        patientList.push(docSnap.data() as Patient);
-      });
-      setDb(prev => ({ ...prev, patients: patientList }));
-    }, (err) => {
-      console.error('Patients snapshot error:', err);
-    });
-
-    let prescriptionsUnsub = () => {};
-    let itemsUnsub = () => {};
-
-    // C. Listen to Prescriptions & PrescriptionItems (Only if Doctor, Secretary is blocked by rules)
-    if (userProfile.role === 'doctor') {
-      const prescriptionsQuery = query(collection(dbFirestore, 'prescriptions'), where('doctorUid', '==', userProfile.doctorUid));
-      prescriptionsUnsub = onSnapshot(prescriptionsQuery, (snap) => {
-        const presList: Prescription[] = [];
-        snap.forEach((docSnap) => {
-          presList.push(docSnap.data() as Prescription);
-        });
-        setDb(prev => ({ ...prev, prescriptions: presList }));
-      }, (err) => {
-        console.error('Prescriptions snapshot error:', err);
-      });
-
-      const itemsQuery = query(collection(dbFirestore, 'prescriptionItems'), where('doctorUid', '==', userProfile.doctorUid));
-      itemsUnsub = onSnapshot(itemsQuery, (snap) => {
-        const itemList: PrescriptionItem[] = [];
-        snap.forEach((docSnap) => {
-          itemList.push(docSnap.data() as PrescriptionItem);
-        });
-        setDb(prev => ({ ...prev, prescriptionItems: itemList }));
-      }, (err) => {
-        console.error('Items snapshot error:', err);
-      });
-    } else {
-      // Secretary gets empty prescriptions local arrays
-      setDb(prev => ({ ...prev, prescriptions: [], prescriptionItems: [] }));
-    }
-
-    return () => {
-      configUnsub();
-      patientsUnsub();
-      prescriptionsUnsub();
-      itemsUnsub();
-    };
+    if (!userProfile) return; let cancelled = false;
+    const refresh = async () => { try { const remote = await loadClinicalData(userProfile); if (!cancelled) setDb(prev => ({ ...prev, ...remote, doctorConfig: remote.doctorConfig || DEFAULT_DOCTOR_CONFIG })); } catch (error) { console.error('Supabase synchronization error:', error); } };
+    void refresh(); const unsubscribe = subscribeClinicalData(userProfile, () => { void refresh(); });
+    return () => { cancelled = true; unsubscribe(); };
   }, [userProfile]);
 
   // 3. Load active prescription if patient has a draft
@@ -291,7 +230,7 @@ export default function App() {
        setSelectedPatient(null);
        setActivePrescription(null);
        setActiveItems([]);
-       await signOut(auth);
+       await supabase.auth.signOut();
     } catch (err) {
        console.error('Failed to log out:', err);
     }
@@ -324,10 +263,10 @@ export default function App() {
   const handleSaveDoctorConfig = async (newConfig: DoctorConfig) => {
     if (userProfile) {
       try {
-        await saveDoctorConfigToFirestore(userProfile.doctorUid, newConfig);
+        await saveDoctorConfig(userProfile.clinicId, newConfig);
         logAudit('UPDATE_DOCTOR_CONFIG', 'DOCTOR', userProfile.doctorUid, db.doctorConfig, newConfig);
       } catch (err) {
-        console.error('Failed to save config to Firestore:', err);
+        console.error('Failed to save config to Supabase:', err);
         alert("Erreur lors de la sauvegarde de la configuration.");
       }
     } else {
@@ -347,7 +286,7 @@ export default function App() {
         // Detect Deletes
         for (const p of db.patients) {
           if (!newPatientsMap.has(p.id)) {
-            await deletePatientFromFirestore(p.id);
+            await deletePatient(p.id);
           }
         }
 
@@ -355,11 +294,11 @@ export default function App() {
         for (const p of newPatients) {
           const current = currentPatientsMap.get(p.id);
           if (!current || JSON.stringify(current) !== JSON.stringify(p)) {
-            await savePatientToFirestore(p, userProfile.doctorUid);
+            await savePatient(p, userProfile.clinicId);
           }
         }
       } catch (err) {
-        console.error('Failed to sync patients to Firestore:', err);
+        console.error('Failed to sync patients to Supabase:', err);
         alert("Une erreur de permission ou réseau est survenue lors de la mise à jour du patient.");
       }
     } else {
@@ -378,13 +317,13 @@ export default function App() {
   const handleSaveDraft = async (prescription: Prescription, items: PrescriptionItem[]) => {
     if (userProfile) {
       try {
-        const saved = await savePrescriptionBundleToFirestore(prescription, items, userProfile.doctorUid);
+        const saved = await savePrescriptionBundle(prescription, items, userProfile.clinicId);
         setActivePrescription(saved.prescription);
         setActiveItems(saved.items);
         void logAudit('SAVE_DRAFT_PRESCRIPTION', 'PRESCRIPTION', saved.prescription.id, null, saved.prescription);
         alert(`Brouillon enregistré avec succès (${saved.prescription.prescription_number})`);
       } catch (err) {
-        console.error('Failed to save draft to Firestore:', err);
+        console.error('Failed to save draft to Supabase:', err);
         alert("Erreur lors de la sauvegarde du brouillon.");
       }
     } else {
@@ -409,7 +348,7 @@ export default function App() {
   const handleSignAndLock = async (prescription: Prescription, items: PrescriptionItem[]) => {
     if (userProfile) {
       try {
-        const saved = await savePrescriptionBundleToFirestore(prescription, items, userProfile.doctorUid);
+        const saved = await savePrescriptionBundle(prescription, items, userProfile.clinicId);
         setActivePrescription(saved.prescription);
         setActiveItems(saved.items);
         void logAudit('SIGN_PRESCRIPTION', 'PRESCRIPTION', saved.prescription.id, null, saved.prescription);
@@ -487,7 +426,7 @@ export default function App() {
       <header className="bg-slate-900 text-white shadow-md print:hidden relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            
+
             {/* Logo and country badge */}
             <div className="flex items-center gap-2.5">
               <Logo size="sm" />
@@ -782,9 +721,9 @@ export default function App() {
 
   if (!user) {
     return (
-      <LoginScreen 
-        onLoginStart={() => setAuthLoading(true)} 
-        onLoginSuccess={() => setAuthLoading(false)} 
+      <LoginScreen
+        onLoginStart={() => setAuthLoading(true)}
+        onLoginSuccess={() => setAuthLoading(false)}
       />
     );
   }
@@ -812,11 +751,11 @@ export default function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        
+
         {/* Clinical Workspace (Dashboard, Patients, Prescription) */}
         {['dashboard', 'patients', 'prescription'].includes(activeTab) && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             {/* Left side: Patient Selection (4 cols) */}
             <div className="lg:col-span-4 space-y-6">
               <PatientSelector
@@ -867,9 +806,9 @@ export default function App() {
               )}
 
               {activeTab === 'patients' && (
-                <PatientDossier 
-                  patient={selectedPatient} 
-                  userRole={userProfile?.role || 'doctor'} 
+                <PatientDossier
+                  patient={selectedPatient}
+                  userRole={userProfile?.role || 'doctor'}
                 />
               )}
 
@@ -920,7 +859,7 @@ export default function App() {
               onSave={handleSaveDoctorConfig}
               onDeleteAccountClick={() => setIsDeleteAccountOpen(true)}
             />
-            
+
             <SecretaryManager doctorUid={userProfile.uid} />
           </div>
         )}
@@ -950,7 +889,7 @@ export default function App() {
             {/* Content */}
             <div className="p-6 space-y-4">
               <p className="text-sm text-slate-600 leading-relaxed">
-                Vous êtes sur le point de supprimer définitivement votre compte <strong>{user?.email}</strong>. 
+                Vous êtes sur le point de supprimer définitivement votre compte <strong>{user?.email}</strong>.
                 Cette opération effacera l'ensemble de votre accès et données sur OrdoMed TN.
               </p>
 

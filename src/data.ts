@@ -15,8 +15,7 @@ import {
 } from './types';
 import pctMedications from './pct_medications.json';
 import generatedTemplates from './dosage_templates.json';
-import { collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db as dbFirestore } from './firebase';
+import { supabase } from './supabase';
 
 // Helper to remove French accents
 export function removeAccents(str: string): string {
@@ -698,36 +697,12 @@ function serializeAuditValue(value: unknown): string | undefined {
   return serialized.length <= 20000 ? serialized : serialized.slice(0, 20000);
 }
 
-// Append-only remote audit logging. Firestore rules bind actor_id to the
-// authenticated user and reject updates/deletes.
-export async function logAudit(
-  action: string,
-  entity_type: string,
-  entity_id: string,
-  before?: any,
-  after?: any
-) {
-  const currentUser = auth.currentUser;
-  if (!currentUser || !auditDoctorUid) return;
-
-  const auditRef = doc(collection(dbFirestore, 'auditLogs'));
-  const beforeJson = serializeAuditValue(before);
-  const afterJson = serializeAuditValue(after);
-  const log = {
-    id: auditRef.id,
-    actor_id: currentUser.uid,
-    doctor_uid: auditDoctorUid,
-    action,
-    entity_type,
-    entity_id,
-    ...(beforeJson ? { before_json: beforeJson } : {}),
-    ...(afterJson ? { after_json: afterJson } : {}),
-    created_at: serverTimestamp(),
-  };
-
-  try {
-    await setDoc(auditRef, log);
-  } catch (error) {
-    console.error('Unable to persist audit event:', error);
-  }
+// Append-only audit logging; RLS binds the event to the authenticated clinic.
+export async function logAudit(action:string,entity_type:string,entity_id:string,before?:unknown,after?:unknown){
+  if(!auditDoctorUid)return;
+  const user=(await supabase.auth.getUser()).data.user; if(!user)return;
+  const membership=await supabase.from('clinic_memberships').select('clinic_id').eq('user_id',user.id).maybeSingle();
+  if(!membership.data)return;
+  const {error}=await supabase.from('audit_events').insert({clinic_id:membership.data.clinic_id,actor_id:user.id,action,entity_type,entity_id,before_data:before??null,after_data:after??null});
+  if(error)console.error('Unable to persist audit event:',error);
 }

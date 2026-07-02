@@ -1,0 +1,20 @@
+-- Keep privileged implementations outside the exposed API schema.
+alter function public.bootstrap_doctor() set schema private;
+alter function public.create_secretary_invitation(text) set schema private;
+alter function public.claim_secretary_invitation(text) set schema private;
+alter function public.remove_secretary(uuid) set schema private;
+alter function public.delete_own_account() set schema private;
+create function public.bootstrap_doctor() returns uuid language sql security invoker set search_path='' as $$select private.bootstrap_doctor()$$;
+create function public.create_secretary_invitation(invitee_email text) returns text language sql security invoker set search_path='' as $$select private.create_secretary_invitation(invitee_email)$$;
+create function public.claim_secretary_invitation(token text) returns uuid language sql security invoker set search_path='' as $$select private.claim_secretary_invitation(token)$$;
+create function public.remove_secretary(member_id uuid) returns void language sql security invoker set search_path='' as $$select private.remove_secretary(member_id)$$;
+create function public.delete_own_account() returns void language sql security invoker set search_path='' as $$select private.delete_own_account()$$;
+revoke all on function public.bootstrap_doctor() from public,anon;revoke all on function public.create_secretary_invitation(text) from public,anon;revoke all on function public.claim_secretary_invitation(text) from public,anon;revoke all on function public.remove_secretary(uuid) from public,anon;revoke all on function public.delete_own_account() from public,anon;
+grant execute on function public.bootstrap_doctor() to authenticated;grant execute on function public.create_secretary_invitation(text) to authenticated;grant execute on function public.claim_secretary_invitation(text) to authenticated;grant execute on function public.remove_secretary(uuid) to authenticated;grant execute on function public.delete_own_account() to authenticated;
+revoke all on function public.rls_auto_enable() from public,anon,authenticated;
+create index audit_events_actor_id_idx on public.audit_events(actor_id);create index audit_events_clinic_id_idx on public.audit_events(clinic_id);create index clinic_memberships_user_id_idx on public.clinic_memberships(user_id);create index patients_clinic_id_idx on public.patients(clinic_id);create index prescriptions_doctor_id_idx on public.prescriptions(doctor_id);create index prescriptions_patient_id_idx on public.prescriptions(patient_id);create index secretary_invitations_claimed_by_idx on public.secretary_invitations(claimed_by);create index secretary_invitations_invited_by_idx on public.secretary_invitations(invited_by);
+drop policy profile_read on public.profiles;create policy profile_read on public.profiles for select to authenticated using(id=(select auth.uid()) or exists(select 1 from public.clinic_memberships a join public.clinic_memberships b using(clinic_id) where a.user_id=(select auth.uid()) and a.role='doctor' and b.user_id=profiles.id));
+drop policy membership_read on public.clinic_memberships;create policy membership_read on public.clinic_memberships for select to authenticated using(user_id=(select auth.uid()) or private.is_member(clinic_id,'doctor'));
+drop policy rx_insert on public.prescriptions;create policy rx_insert on public.prescriptions for insert to authenticated with check(private.is_member(clinic_id,'doctor') and doctor_id=(select auth.uid()));
+drop policy rx_update on public.prescriptions;create policy rx_update on public.prescriptions for update to authenticated using(private.is_member(clinic_id,'doctor') and status<>'signed') with check(private.is_member(clinic_id,'doctor') and doctor_id=(select auth.uid()));
+drop policy audit_insert on public.audit_events;create policy audit_insert on public.audit_events for insert to authenticated with check(private.is_member(clinic_id) and actor_id=(select auth.uid()));

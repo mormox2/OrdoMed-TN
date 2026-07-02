@@ -76,7 +76,7 @@ Dr Rtimi Mossaab
 ### Prérequis
 * Node.js 20 ou supérieur (Node.js 22 LTS recommandé)
 * npm ou yarn
-* Java 21 pour l'émulateur et les tests de règles Firestore
+* Supabase CLI pour appliquer et tester le schema PostgreSQL
 
 ### Instructions
 
@@ -101,7 +101,7 @@ Dr Rtimi Mossaab
    npm run lint
    ```
 
-5. **Exécuter tous les contrôles (types, règles Firestore et build)** :
+5. **Exécuter tous les contrôles (types, tests applicatifs et build)** :
    ```bash
    npm run check
    ```
@@ -116,7 +116,7 @@ L'application inclut une console de tests automatisés accessible directement en
 * La détection précise des interactions critiques (ex: **Aspirine** et **Sintrom / Acénocoumarol**).
 * Le blocage strict des prescriptions de psychotropes supérieures à 28 jours.
 
-Les règles Firestore disposent également d'une suite d'émulateur automatisée couvrant l'isolation entre cabinets, les droits des secrétaires, les invitations, l'immuabilité des ordonnances signées et les journaux d'audit append-only. Lancez-la avec `npm run test:rules`.
+Les politiques RLS Supabase sont definies par migration et testees dans `supabase/tests/rls.test.sql`. Lancez `supabase test db` sur une instance locale demarree.
 
 ---
 

@@ -1,0 +1,10 @@
+begin;
+select plan(6);
+select has_table('public','patients');
+select has_table('public','prescriptions');
+select policies_are('public','patients',array['patient_delete','patient_insert','patient_read','patient_update']);
+select policies_are('public','prescriptions',array['rx_delete','rx_insert','rx_read','rx_update']);
+select policies_are('public','prescription_items',array['item_delete','item_insert','item_read','item_update']);
+select function_privs_are('public','delete_own_account',array[]::text[],'authenticated',array['EXECUTE']);
+select * from finish();
+rollback;
